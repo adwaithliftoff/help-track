@@ -32,6 +32,12 @@ export class EmployeesService {
     });
   }
 
+  async findByEmail(email: string) {
+    return this.prisma.employee.findUnique({
+      where: { officialEmail: email },
+    });
+  }
+
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     return this.prisma.employee.update({
       data: { ...updateEmployeeDto },
