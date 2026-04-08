@@ -34,7 +34,7 @@ export class AuthService {
     const match = await bcrypt.compare(dto.password, user.password);
     if (!match) throw new UnauthorizedException('Invalid Credentials');
 
-    const payload = { sub: user.id };
+    const payload = { sub: user.id, role: user.role };
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET,
@@ -45,8 +45,16 @@ export class AuthService {
         expiresIn: '1d',
       }),
     ]);
-    res.cookie('access_token', access_token, {});
-    res.cookie('refresh_token', refresh_token, {});
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
+    res.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
     return { message: 'Logged in successfully' };
   }
 }
