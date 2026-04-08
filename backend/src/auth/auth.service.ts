@@ -8,7 +8,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -56,5 +57,36 @@ export class AuthService {
       sameSite: 'none',
     });
     return { message: 'Logged in successfully' };
+  }
+
+  async refresh(req: Request, res: Response) {
+    const refreshToken = req.cookies?.refresh_token;
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token');
+    }
+    try {
+      const refreshSecret = process.env.JWT_REFRESH_SECRET;
+      if (!refreshSecret)
+        throw new UnauthorizedException('Missing refresh secret');
+      const payload = jwt.verify(refreshToken, refreshSecret) as any;
+
+      const accessSecret = process.env.JWT_ACCESS_SECRET;
+      if (!accessSecret)
+        throw new UnauthorizedException('Missing access secret');
+      const accessToken = jwt.sign(
+        { sub: payload.sub, role: payload.role },
+        accessSecret,
+        { expiresIn: '5m' },
+      );
+
+      res.cookie('access_token', accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+      });
+      return { message: 'Token refreshed' };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 }

@@ -1,9 +1,26 @@
 export async function apiFetch(path: string, options?: RequestInit) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
+  let res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     ...options,
   });
+  if (res.status === 401) {
+    const refreshRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+      {
+        method: "POST",
+        credentials: "include",
+      },
+    );
+    if (!refreshRes.ok) {
+      throw new Error("Invalid refresh token");
+    }
+    res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message ?? "Request failed");
