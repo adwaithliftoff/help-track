@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -40,7 +41,11 @@ export default function HomePage() {
       <div className="rounded-lg border p-4">
         <h2 className="text-sm font-semibold text-gray-500 mb-3">Employees</h2>
         {employees.map((employee) => (
-          <div key={employee.id} className="flex justify-between text-sm">
+          <Link
+            key={employee.id}
+            href={`/employees/${employee.id}`}
+            className="flex justify-between text-sm hover:bg-white/10 rounded p-1 -mx-1"
+          >
             <div>
               <p className="font-medium">{employee.fullName}</p>
               <p className="text-gray-400">
@@ -50,7 +55,7 @@ export default function HomePage() {
             <span className="text-gray-400 text-xs">
               {new Date(employee.joiningDate).toLocaleDateString()}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
