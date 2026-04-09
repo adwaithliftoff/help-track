@@ -28,6 +28,25 @@ model Employee {
   updatedAt      DateTime       @updatedAt
 }
 
+model Asset {
+  id            Int           @id @default(autoincrement())
+  assetCategory AssetCategory
+  assetType     String
+  assetName     String
+  brandVendor   String?
+  modelPlan     String?
+  purchaseDate  DateTime?
+  status        AssetStatus   @default(INVENTORY)
+  locationOwner String?
+  serialNumber  String?       @unique
+  macAddress    String?       @unique
+  assetTag      String?       @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("assets")
+}
+
 enum EmployeeStatus {
   ACTIVE
   INACTIVE
@@ -38,4 +57,23 @@ enum RoleName {
   EMPLOYEE
   ADMIN
   SUPER_ADMIN
+}
+
+enum AssetStatus {
+  INVENTORY
+  ALLOCATED
+  UNDER_MAINTENANCE
+  RETURNED
+  INACTIVE
+  LOST
+  RETIRED
+}
+
+enum AssetCategory {
+  HARDWARE
+  ACCESSORY
+  SOFTWARE
+  AI_SUBSCRIPTION
+  SAAS_TOOL
+  OTHER
 }
