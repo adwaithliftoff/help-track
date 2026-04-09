@@ -95,4 +95,9 @@ export class AuthService {
     res.clearCookie('refresh_token');
     return { message: 'Logged out' };
   }
+
+  async me(userId: number) {
+    const user = this.employeesService.findOne(userId);
+    return user;
+  }
 }
