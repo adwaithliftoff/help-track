@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Employee = {
@@ -12,6 +13,7 @@ type Employee = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   useEffect(() => {
     async function fetchEmployees() {
@@ -26,6 +28,14 @@ export default function HomePage() {
       <div className="rounded-lg border p-4">
         <p className="text-sm text-gray-300">Total Employees</p>
         <p className="text-3xl font-bold">{employees.length}</p>
+      </div>
+      <div>
+        <button
+          onClick={() => router.push("/employees/new")}
+          className="bg-neutral-300 text-black text-sm px-4 py-2 rounded-lg"
+        >
+          + Add Employee
+        </button>
       </div>
       <div className="rounded-lg border p-4">
         <h2 className="text-sm font-semibold text-gray-500 mb-3">Employees</h2>
