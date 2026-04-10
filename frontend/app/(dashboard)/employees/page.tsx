@@ -13,7 +13,7 @@ type Employee = {
   joiningDate: string;
 };
 
-export default function HomePage() {
+export default function Employees() {
   const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   useEffect(() => {
