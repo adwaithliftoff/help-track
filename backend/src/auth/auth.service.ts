@@ -56,7 +56,13 @@ export class AuthService {
       secure: true,
       sameSite: 'none',
     });
-    return { message: 'Logged in successfully' };
+    return {
+      message: 'Logged in successfully',
+      user: {
+        id: user.id,
+        role: user.role,
+      },
+    };
   }
 
   async refresh(req: Request, res: Response) {
