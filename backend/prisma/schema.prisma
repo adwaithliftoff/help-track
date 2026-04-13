@@ -26,6 +26,10 @@ model Employee {
   role           RoleName       @default(EMPLOYEE)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+
+  allocations     AllocationHistory[] @relation("AssignedEmployee")
+  allocatedBy     AllocationHistory[] @relation("AllocatedByAdmin")
+  receivedReturns AllocationHistory[] @relation("ReceivingAdmin")
 }
 
 model Asset {
@@ -44,7 +48,30 @@ model Asset {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  allocations AllocationHistory[]
+
   @@map("assets")
+}
+
+model AllocationHistory {
+  id                 Int              @id @default(autoincrement())
+  assetId            Int
+  assignedEmployeeId Int
+  allocationDate     DateTime
+  allocatedById      Int?
+  returnDate         DateTime?
+  receivingAdminId   Int?
+  returnCondition    ReturnCondition?
+  remarks            String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  asset            Asset     @relation(fields: [assetId], references: [id])
+  assignedEmployee Employee  @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id])
+  allocatedBy      Employee? @relation("AllocatedByAdmin", fields: [allocatedById], references: [id])
+  receivingAdmin   Employee? @relation("ReceivingAdmin", fields: [receivingAdminId], references: [id])
+
+  @@map("allocation_history")
 }
 
 enum EmployeeStatus {
@@ -76,4 +103,11 @@ enum AssetCategory {
   AI_SUBSCRIPTION
   SAAS_TOOL
   OTHER
+}
+
+enum ReturnCondition {
+  NEW
+  GOOD
+  FAIR
+  DAMAGED
 }
