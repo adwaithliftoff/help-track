@@ -27,7 +27,7 @@ export class AllocationsService {
     if (asset.status === AssetStatus.ALLOCATED)
       throw new BadRequestException('Asset already allocated');
 
-    const employee = await this.prisma.asset.findUnique({
+    const employee = await this.prisma.employee.findUnique({
       where: { id: dto.assignedEmployeeId },
     });
     if (!employee) throw new NotFoundException('Employee not found');
