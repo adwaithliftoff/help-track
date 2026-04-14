@@ -5,6 +5,7 @@ import { EmployeesModule } from './employees/employees.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { AssetsModule } from './assets/assets.module';
+import { AllocationsModule } from './allocations/allocations.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AssetsModule } from './assets/assets.module';
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     AssetsModule,
+    AllocationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
