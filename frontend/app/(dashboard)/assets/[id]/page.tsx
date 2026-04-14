@@ -46,20 +46,7 @@ export default function AssetPage() {
         "OTHER",
       ],
     },
-    {
-      name: "status",
-      label: "Status",
-      type: "select",
-      options: [
-        "INVENTORY",
-        "ALLOCATED",
-        "UNDER_MAINTENANCE",
-        "RETURNED",
-        "INACTIVE",
-        "LOST",
-        "RETIRED",
-      ],
-    },
+    { name: "status", label: "Status", type: "text", readOnly: true },
     { name: "brandVendor", label: "Brand / Vendor", type: "text" },
     { name: "modelPlan", label: "Model / Plan", type: "text" },
     { name: "locationOwner", label: "Location / Owner", type: "text" },
@@ -122,7 +109,7 @@ export default function AssetPage() {
         {fields.map((field) => (
           <div key={field.name}>
             <label className="text-sm text-gray-500 mb-1">{field.label}</label>
-            {editing ? (
+            {editing && !field.readOnly ? (
               field.type === "select" ? (
                 <select
                   name={field.name}
