@@ -26,6 +26,8 @@ type Allocation = {
   remarks?: string | null;
   assignedEmployee?: { fullName: string };
   allocatedBy?: { fullName: string };
+  returnCondition?: string | null;
+  receivingAdmin?: { fullName: string };
 };
 
 type Employee = {
@@ -366,6 +368,48 @@ export default function AssetPage() {
           </div>
         )
       )}
+
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <h2 className="text-sm font-semibold text-white">Allocation History</h2>
+        {allocations.length === 0 ? (
+          <p className="text-sm text-gray-400">No allocation history yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {allocations.map((allocation) => (
+              <div
+                key={allocation.id}
+                className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-1"
+              >
+                <p className="text-sm text-white">
+                  Assigned to: {allocation.assignedEmployee?.fullName}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Allocated by: {allocation.allocatedBy?.fullName}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Allocation date:{" "}
+                  {new Date(allocation.allocationDate).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Return date:{" "}
+                  {allocation.returnDate
+                    ? new Date(allocation.returnDate).toLocaleDateString()
+                    : "Not returned"}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Return condition: {allocation.returnCondition}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Received by: {allocation.receivingAdmin?.fullName}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Remarks: {allocation.remarks}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
