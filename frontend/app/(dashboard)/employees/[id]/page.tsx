@@ -16,6 +16,20 @@ type Employee = {
   role: string;
 };
 
+type EmployeeAllocation = {
+  id: number;
+  allocationDate: string;
+  returnDate?: string | null;
+  remarks?: string | null;
+  asset: {
+    id: number;
+    assetName: string;
+    assetCategory: string;
+    assetType: string;
+    assetTag?: string | null;
+  };
+};
+
 export default function EmployeePage() {
   const { id } = useParams();
   const router = useRouter();
@@ -24,6 +38,7 @@ export default function EmployeePage() {
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [form, setForm] = useState<Partial<Employee>>({});
   const [editing, setEditing] = useState(false);
+  const [allocations, setAllocations] = useState<EmployeeAllocation[]>([]);
 
   const fields = [
     { name: "fullName", label: "Full Name" },
@@ -36,13 +51,15 @@ export default function EmployeePage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [employee, me] = await Promise.all([
+      const [employee, me, allocations] = await Promise.all([
         await apiFetch(`/employees/${id}`),
         await apiFetch("/auth/me"),
+        await apiFetch(`/allocations/employee/${id}`),
       ]);
       setEmployee(employee);
       setForm(employee);
       setCurrentUserRole(me.role);
+      setAllocations(allocations);
     }
     fetchData();
   }, [id]);
@@ -73,6 +90,8 @@ export default function EmployeePage() {
 
   const isAdmin =
     currentUserRole === "ADMIN" || currentUserRole === "SUPER_ADMIN";
+
+  const activeAllocations = allocations.filter((a) => !a.returnDate);
 
   if (!employee) return;
   return (
@@ -135,6 +154,40 @@ export default function EmployeePage() {
             </>
           )}
         </div>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <h2 className="text-sm font-semibold text-white">Allocated Assets</h2>
+        {activeAllocations.length === 0 ? (
+          <p className="text-sm text-gray-400">No active assets assigned.</p>
+        ) : (
+          <div className="space-y-3">
+            {activeAllocations.map((allocation) => (
+              <div
+                key={allocation.id}
+                className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-1"
+              >
+                <p className="text-sm font-medium text-white">
+                  {allocation.asset.assetName}
+                </p>
+                <p className="text-sm text-gray-400">
+                  {allocation.asset.assetCategory} -{" "}
+                  {allocation.asset.assetType}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Asset Tag: {allocation.asset.assetTag || "-"}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Allocation date:{" "}
+                  {new Date(allocation.allocationDate).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Remarks: {allocation.remarks || "-"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
