@@ -17,8 +17,20 @@ type Asset = {
   serialNumber?: string;
   macAddress?: string;
   assetTag?: string;
-  createdAt: string;
-  updatedAt: string;
+};
+
+type Allocation = {
+  id: number;
+  allocationDate: string;
+  returnDate?: string | null;
+  remarks?: string | null;
+  assignedEmployee?: { fullName: string };
+  allocatedBy?: { fullName: string };
+};
+
+type Employee = {
+  id: number;
+  fullName: string;
 };
 
 export default function AssetPage() {
@@ -29,6 +41,30 @@ export default function AssetPage() {
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [form, setForm] = useState<Partial<Asset>>({});
   const [editing, setEditing] = useState(false);
+  const [allocations, setAllocations] = useState<Allocation[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [me, setMe] = useState<{ id: number; role: string } | null>(null);
+
+  const [allocateForm, setAllocateForm] = useState({
+    assignedEmployeeId: 0,
+    allocationDate: "",
+    remarks: "",
+  });
+
+  const [returnForm, setReturnForm] = useState({
+    returnDate: "",
+    returnCondition: "GOOD",
+    remarks: "",
+  });
+
+  const payload = {
+    ...form,
+    purchaseDate: form.purchaseDate
+      ? new Date(form.purchaseDate).toISOString()
+      : undefined,
+  };
+
+  const activeAllocation = allocations.find((a) => !a.returnDate);
 
   const fields = [
     { name: "assetName", label: "Asset Name", type: "text" },
@@ -58,14 +94,23 @@ export default function AssetPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [asset, me] = await Promise.all([
+      const [asset, me, allocaionHistory] = await Promise.all([
         await apiFetch(`/assets/${id}`),
         await apiFetch("/auth/me"),
+        await apiFetch(`/allocations/asset/${id}`),
       ]);
       setAsset(asset);
       setForm(asset);
       setCurrentUserRole(me.role);
+      setMe(me);
+      setAllocations(allocaionHistory);
+
+      if (me.role === "ADMIN" || me.role === "SUPER_ADMIN") {
+        const employeeList = await apiFetch("/employees");
+        setEmployees(employeeList);
+      }
     }
+
     fetchData();
   }, [id]);
 
@@ -79,7 +124,7 @@ export default function AssetPage() {
     try {
       const updated = await apiFetch(`/assets/${id}`, {
         method: "PATCH",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       setAsset(updated);
       setEditing(false);
@@ -95,17 +140,51 @@ export default function AssetPage() {
     router.push("/assets");
   }
 
+  async function handleReturn() {
+    if (!activeAllocation || !me) return;
+    await apiFetch(`/allocations/${activeAllocation.id}/return`, {
+      method: "PATCH",
+      body: JSON.stringify({ ...returnForm, receivingAdminId: me.id }),
+    });
+    const [updatedAsset, updatedAllocations] = await Promise.all([
+      apiFetch(`/assets/${id}`),
+      apiFetch(`/allocations/asset/${id}`),
+    ]);
+
+    setAsset(updatedAsset);
+    setAllocations(updatedAllocations);
+  }
+
+  async function handleAllocate() {
+    if (!me) return;
+    await apiFetch(`/allocations`, {
+      method: "POST",
+      body: JSON.stringify({
+        ...allocateForm,
+        assetId: Number(id),
+        allocatedById: me.id,
+      }),
+    });
+
+    const [updatedAsset, updatedAllocations] = await Promise.all([
+      apiFetch(`/assets/${id}`),
+      apiFetch(`/allocations/asset/${id}`),
+    ]);
+
+    setAsset(updatedAsset);
+    setAllocations(updatedAllocations);
+  }
   const isAdmin =
     currentUserRole === "ADMIN" || currentUserRole === "SUPER_ADMIN";
 
   if (!asset) return;
   return (
-    <div className="max-w-lg mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{asset.assetName}</h1>
       </div>
 
-      <div className="space-y-4">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
         {fields.map((field) => (
           <div key={field.name}>
             <label className="text-sm text-gray-500 mb-1">{field.label}</label>
@@ -115,7 +194,7 @@ export default function AssetPage() {
                   name={field.name}
                   value={form[field.name as keyof typeof form]}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-black bg-[#0a0a0a]"
+                  className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
                 >
                   <option value="">Select {field.label}</option>
                   {field.options?.map((option) => (
@@ -129,7 +208,8 @@ export default function AssetPage() {
                   name={field.name}
                   value={form[field.name as keyof typeof form]}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-black"
+                  type={field.type}
+                  className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
                 />
               )
             ) : (
@@ -174,6 +254,118 @@ export default function AssetPage() {
           )}
         </div>
       </div>
+
+      {activeAllocation ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-amber-200">
+            Allocation Details
+          </h2>
+          <div className="space-y-1 text-sm text-gray-300">
+            <p>
+              Assigned to: {activeAllocation.assignedEmployee?.fullName || "-"}
+            </p>
+            <p>
+              Allocation date:{" "}
+              {new Date(activeAllocation.allocationDate).toLocaleDateString()}
+            </p>
+            <p>Allocated by: {activeAllocation.allocatedBy?.fullName || "-"}</p>
+            <p>Remarks: {activeAllocation.remarks || "-"}</p>
+          </div>
+
+          {isAdmin && (
+            <div className="space-y-3 pt-2 border-t border-white/10">
+              <h3 className="text-sm font-medium text-white">Return Asset</h3>
+              <input
+                type="date"
+                value={returnForm.returnDate}
+                onChange={(e) =>
+                  setReturnForm({ ...returnForm, returnDate: e.target.value })
+                }
+                className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"
+              />
+              <select
+                value={returnForm.returnCondition}
+                onChange={(e) =>
+                  setReturnForm({
+                    ...returnForm,
+                    returnCondition: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"
+              >
+                <option value="NEW">NEW</option>
+                <option value="GOOD">GOOD</option>
+                <option value="FAIR">FAIR</option>
+                <option value="DAMAGED">DAMAGED</option>
+              </select>
+              <input
+                value={returnForm.remarks}
+                onChange={(e) =>
+                  setReturnForm({ ...returnForm, remarks: e.target.value })
+                }
+                placeholder="Return remarks"
+                className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"
+              />
+              <button
+                onClick={handleReturn}
+                className="rounded-lg bg-red-500 px-4 py-2 text-sm text-white"
+              >
+                Return Asset
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        isAdmin && (
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
+            <h2 className="text-sm font-semibold text-emerald-200">
+              Allocate Asset
+            </h2>
+            <select
+              value={allocateForm.assignedEmployeeId}
+              onChange={(e) =>
+                setAllocateForm({
+                  ...allocateForm,
+                  assignedEmployeeId: Number(e.target.value),
+                })
+              }
+              className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"
+            >
+              <option value="">Select employee</option>
+              {employees.map((employee) => (
+                <option key={employee.id} value={employee.id}>
+                  {employee.fullName}
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={allocateForm.allocationDate}
+              onChange={(e) =>
+                setAllocateForm({
+                  ...allocateForm,
+                  allocationDate: e.target.value,
+                })
+              }
+              className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"
+            />
+            <input
+              value={allocateForm.remarks}
+              onChange={(e) =>
+                setAllocateForm({ ...allocateForm, remarks: e.target.value })
+              }
+              placeholder="Allocation remarks"
+              className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleAllocate}
+              className="rounded-lg bg-emerald-500 px-4 py-2 text-sm text-black"
+            >
+              Allocate Asset
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
 }

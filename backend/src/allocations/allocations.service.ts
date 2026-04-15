@@ -71,6 +71,26 @@ export class AllocationsService {
   async getByAsset(assetId: number) {
     return this.prisma.allocationHistory.findMany({
       where: { assetId: assetId },
+      include: {
+        assignedEmployee: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        allocatedBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        receivingAdmin: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
     });
   }
 
