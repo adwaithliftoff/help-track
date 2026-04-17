@@ -215,7 +215,13 @@ export default function AssetPage() {
                 />
               )
             ) : (
-              <p className="text-sm">{asset[field.name as keyof Asset]}</p>
+              <p className="text-sm text-gray-300">
+                {field.type === "date"
+                  ? new Date(
+                      asset[field.name as keyof Asset] as string,
+                    ).toLocaleDateString()
+                  : asset[field.name as keyof Asset]}
+              </p>
             )}
           </div>
         ))}

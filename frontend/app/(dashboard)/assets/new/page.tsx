@@ -91,7 +91,7 @@ export default function NewAsset() {
                 name={field.name}
                 value={form[field.name as keyof typeof form]}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-black bg-[#0a0a0a]"
+                className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-500"
               >
                 <option value="">Select {field.label}</option>
                 {field.options?.map((option) => (
@@ -106,7 +106,7 @@ export default function NewAsset() {
                 type={field.type}
                 value={form[field.name as keyof typeof form]}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-black"
+                className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-500"
               />
             )}
           </div>

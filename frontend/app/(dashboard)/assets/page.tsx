@@ -22,6 +22,16 @@ type Asset = {
   updatedAt: string;
 };
 
+const statusColors: Record<string, string> = {
+  INVENTORY: "bg-blue-900 text-blue-300",
+  ALLOCATED: "bg-green-900 text-green-300",
+  UNDER_MAINTENANCE: "bg-amber-900 text-amber-300",
+  RETURNED: "bg-gray-800 text-gray-400",
+  INACTIVE: "bg-gray-800 text-gray-400",
+  LOST: "bg-red-900 text-red-300",
+  RETIRED: "bg-gray-800 text-gray-400",
+};
+
 export default function Assets() {
   const router = useRouter();
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -34,44 +44,62 @@ export default function Assets() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="rounded-lg border p-4">
-        <p className="text-sm text-gray-300">Total Assets</p>
-        <p className="text-3xl font-bold">{assets.length}</p>
-      </div>
-      <div>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-medium text-gray-100">Assets</h1>
+          <p className="text-sm text-gray-500">{assets.length} total</p>
+        </div>
         <button
           onClick={() => router.push("/assets/new")}
-          className="bg-neutral-300 text-black text-sm px-4 py-2 rounded-lg"
+          className="bg-gray-100 text-gray-900 text-sm px-4 py-2 rounded-lg hover:bg-white transition-colors"
         >
           + Add Asset
         </button>
       </div>
-      <div className="rounded-lg border p-4">
-        <h2 className="text-sm font-semibold text-gray-500 mb-3">Assets</h2>
-        {assets.map((asset) => (
-          <Link
-            key={asset.id}
-            href={`/assets/${asset.id}`}
-            className="flex justify-between text-sm hover:bg-white/10 rounded p-1 -mx-1"
-          >
-            <div>
-              <p className="font-medium">{asset.assetName}</p>
-              <p className="text-gray-400">
-                {asset.assetCategory} - {asset.assetType}
-              </p>
-              {asset.locationOwner && (
-                <p className="text-gray-500 text-xs">{asset.locationOwner}</p>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="text-gray-400 text-xs">{asset.status}</span>
-              {asset.assetTag && (
-                <span className="text-gray-500 text-xs">{asset.assetTag}</span>
-              )}
-            </div>
-          </Link>
-        ))}
+
+      <div className="bg-gray-900 rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-800 text-xs text-gray-500">
+              <th className="text-left px-4 py-3">Name</th>
+              <th className="text-left px-4 py-3">Category</th>
+              <th className="text-left px-4 py-3">Type</th>
+              <th className="text-left px-4 py-3">Asset tag</th>
+              <th className="text-left px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assets.map((asset) => (
+              <tr
+                key={asset.id}
+                onClick={() => router.push(`/assets/${asset.id}`)}
+                className="border-b border-gray-800 last:border-0 hover:bg-gray-800 cursor-pointer transition-colors"
+              >
+                <td className="px-4 py-3">
+                  <p className="text-gray-100 font-medium">{asset.assetName}</p>
+                  <p className="text-gray-500 text-xs">
+                    {asset.brandVendor ?? "—"}
+                  </p>
+                </td>
+                <td className="px-4 py-3 text-gray-400">
+                  {asset.assetCategory}
+                </td>
+                <td className="px-4 py-3 text-gray-400">{asset.assetType}</td>
+                <td className="px-4 py-3 text-gray-400">
+                  {asset.assetTag ?? "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`text-xs px-2 py-1 rounded-md ${statusColors[asset.status] ?? "bg-gray-800 text-gray-400"}`}
+                  >
+                    {asset.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
