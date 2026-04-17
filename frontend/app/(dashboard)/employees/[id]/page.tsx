@@ -41,12 +41,17 @@ export default function EmployeePage() {
   const [allocations, setAllocations] = useState<EmployeeAllocation[]>([]);
 
   const fields = [
-    { name: "fullName", label: "Full Name" },
-    { name: "officialEmail", label: "Official Email" },
-    { name: "department", label: "Department" },
-    { name: "designation", label: "Designation" },
-    { name: "joiningDate", label: "Joining Date" },
-    { name: "status", label: "Status" },
+    { name: "fullName", label: "Full Name", type: "text" },
+    { name: "officialEmail", label: "Official Email", type: "text" },
+    { name: "department", label: "Department", type: "text" },
+    { name: "designation", label: "Designation", type: "text" },
+    { name: "joiningDate", label: "Joining Date", type: "date" },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: ["ACTIVE", "INACTIVE", "EXITED"],
+    },
   ];
 
   useEffect(() => {
@@ -64,7 +69,9 @@ export default function EmployeePage() {
     fetchData();
   }, [id]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
@@ -95,25 +102,46 @@ export default function EmployeePage() {
 
   if (!employee) return;
   return (
-    <div className="max-w-lg mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold">{employee.fullName}</h1>
       </div>
 
-      <div className="space-y-4">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
         {fields.map((field) => (
           <div key={field.name}>
             <label className="text-sm text-gray-500 mb-1">{field.label}</label>
             {editing ? (
-              <input
-                name={field.name}
-                value={form[field.name as keyof typeof form]}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-black"
-              />
+              field.type === "select" ? (
+                <select
+                  name={field.name}
+                  value={form[field.name as keyof typeof form]}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
+                >
+                  <option value="">Select {field.label}</option>
+                  {field.options?.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name={field.name}
+                  value={form[field.name as keyof typeof form]}
+                  onChange={handleChange}
+                  type={field.type}
+                  className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
+                />
+              )
             ) : (
-              <p className="text-sm">
-                {employee[field.name as keyof Employee]}
+              <p className="text-sm text-gray-300">
+                {field.type === "date"
+                  ? new Date(
+                      employee[field.name as keyof Employee] as string,
+                    ).toLocaleDateString()
+                  : employee[field.name as keyof Employee]}
               </p>
             )}
           </div>
@@ -130,7 +158,7 @@ export default function EmployeePage() {
               </button>
               <button
                 onClick={() => setEditing(false)}
-                className="flex-1 border text-sm py-2 rounded-lg"
+                className="flex-1 border border-white/10 text-sm py-2 rounded-lg"
               >
                 Cancel
               </button>{" "}
@@ -139,7 +167,7 @@ export default function EmployeePage() {
             <>
               <button
                 onClick={() => setEditing(true)}
-                className="flex-1 border text-sm py-2 rounded-lg"
+                className="flex-1 border border-white/10 text-sm py-2 rounded-lg"
               >
                 Edit
               </button>{" "}
