@@ -40,9 +40,6 @@ export class EmployeesService {
 
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     const data: any = { ...updateEmployeeDto };
-    if (updateEmployeeDto.password) {
-      data.password = await bcrypt.hash(updateEmployeeDto.password, 10);
-    }
     if (updateEmployeeDto.joiningDate) {
       data.joiningDate = new Date(updateEmployeeDto.joiningDate);
     }

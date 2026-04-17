@@ -39,7 +39,7 @@ export class EmployeesController {
     return this.employeesService.findOne(+id);
   }
 
-  @UseGuards(SelfGuard)
+  @Roles('SUPER_ADMIN', 'ADMIN')
   @Patch(':id')
   update(
     @Param('id') id: string,

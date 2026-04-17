@@ -42,7 +42,12 @@ export default function EmployeePage() {
 
   const fields = [
     { name: "fullName", label: "Full Name", type: "text" },
-    { name: "officialEmail", label: "Official Email", type: "text" },
+    {
+      name: "officialEmail",
+      label: "Official Email",
+      type: "text",
+      readOnly: true,
+    },
     { name: "department", label: "Department", type: "text" },
     { name: "designation", label: "Designation", type: "text" },
     { name: "joiningDate", label: "Joining Date", type: "date" },
@@ -76,6 +81,7 @@ export default function EmployeePage() {
   }
 
   async function handleUpdate() {
+    if (!confirm("Save changes?")) return;
     try {
       const updated = await apiFetch(`/employees/${id}`, {
         method: "PATCH",
@@ -89,6 +95,7 @@ export default function EmployeePage() {
   }
 
   async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this employee?")) return;
     await apiFetch(`/employees/${id}`, {
       method: "DELETE",
     });
@@ -111,7 +118,7 @@ export default function EmployeePage() {
         {fields.map((field) => (
           <div key={field.name}>
             <label className="text-sm text-gray-500 mb-1">{field.label}</label>
-            {editing ? (
+            {editing && !field.readOnly ? (
               field.type === "select" ? (
                 <select
                   name={field.name}
@@ -164,22 +171,22 @@ export default function EmployeePage() {
               </button>{" "}
             </>
           ) : (
-            <>
-              <button
-                onClick={() => setEditing(true)}
-                className="flex-1 border border-white/10 text-sm py-2 rounded-lg"
-              >
-                Edit
-              </button>{" "}
-              {isAdmin && (
+            isAdmin && (
+              <>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex-1 border border-white/10 text-sm py-2 rounded-lg"
+                >
+                  Edit
+                </button>{" "}
                 <button
                   onClick={handleDelete}
                   className="flex-1 bg-red-500 text-white text-sm py-2 rounded-lg"
                 >
                   Delete
                 </button>
-              )}
-            </>
+              </>
+            )
           )}
         </div>
       </div>
