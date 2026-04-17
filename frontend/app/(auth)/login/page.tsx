@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -88,12 +87,6 @@ export default function Login() {
         >
           {isLoading ? "Logging in..." : "Login"}
         </button>
-        <p className="text-sm text-center text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
-        </p>
       </form>
     </main>
   );

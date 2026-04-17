@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { EmployeesService } from 'src/employees/employees.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -17,17 +15,6 @@ export class AuthService {
     private readonly employeesService: EmployeesService,
     private readonly jwtService: JwtService,
   ) {}
-
-  async register(dto: RegisterDto) {
-    const existing = await this.employeesService.findByEmail(dto.officialEmail);
-    if (existing) throw new BadRequestException('Email already exists');
-    const user = this.employeesService.create({
-      ...dto,
-      role: 'EMPLOYEE',
-      status: 'ACTIVE',
-    });
-    return user;
-  }
 
   async login(dto: LoginDto, res: Response) {
     const user = await this.employeesService.findByEmail(dto.officialEmail);
