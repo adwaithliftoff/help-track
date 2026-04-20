@@ -41,16 +41,42 @@ model Asset {
   modelPlan     String?
   purchaseDate  DateTime?
   status        AssetStatus   @default(INVENTORY)
-  locationOwner String?
-  serialNumber  String?       @unique
-  macAddress    String?       @unique
-  assetTag      String?       @unique
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  allocations AllocationHistory[]
+  allocations         AllocationHistory[]
+  physicalAsset       PhysicalAsset?
+  digitalSubscription DigitalSubscription?
 
   @@map("assets")
+}
+
+model PhysicalAsset {
+  id           Int     @id @default(autoincrement())
+  assetId      Int     @unique
+  serialNumber String? @unique
+  macAddress   String? @unique
+  assetTag     String? @unique
+
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  @@map("physical_assets")
+}
+
+model DigitalSubscription {
+  id              Int       @id @default(autoincrement())
+  assetId         Int       @unique
+  planLicenseType String?
+  totalSeats      Int?
+  renewalDate     DateTime?
+  accountOwner    String?
+  licenseKey      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  @@map("digital_subscriptions")
 }
 
 model AllocationHistory {

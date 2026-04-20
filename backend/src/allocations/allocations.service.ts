@@ -104,7 +104,6 @@ export class AllocationsService {
             assetName: true,
             assetCategory: true,
             assetType: true,
-            assetTag: true,
             status: true,
           },
         },

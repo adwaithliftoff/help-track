@@ -1,4 +1,11 @@
-import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { AssetCategory, AssetStatus } from 'generated/prisma/enums';
 
 export class CreateAssetDto {
@@ -29,10 +36,6 @@ export class CreateAssetDto {
 
   @IsOptional()
   @IsString()
-  locationOwner?: string;
-
-  @IsOptional()
-  @IsString()
   serialNumber?: string;
 
   @IsOptional()
@@ -42,4 +45,25 @@ export class CreateAssetDto {
   @IsOptional()
   @IsString()
   assetTag?: string;
+
+  @IsOptional()
+  @IsString()
+  planLicenseType?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value))
+  @IsInt()
+  totalSeats?: number;
+
+  @IsOptional()
+  @IsDateString()
+  renewalDate?: string;
+
+  @IsOptional()
+  @IsString()
+  accountOwner?: string;
+
+  @IsOptional()
+  @IsString()
+  licenseKey?: string;
 }
