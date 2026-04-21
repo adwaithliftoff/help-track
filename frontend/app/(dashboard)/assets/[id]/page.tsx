@@ -5,18 +5,21 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Asset = {
-  id: number;
   assetCategory: string;
   assetType: string;
   assetName: string;
-  brandVendor?: string;
-  modelPlan?: string;
-  purchaseDate?: string;
+  brandVendor: string;
+  modelPlan: string;
+  purchaseDate: string;
   status: string;
-  locationOwner?: string;
-  serialNumber?: string;
-  macAddress?: string;
-  assetTag?: string;
+  serialNumber: string;
+  macAddress: string;
+  assetTag: string;
+  planLicenseType: string;
+  totalSeats: number | "";
+  renewalDate: string;
+  accountOwner: string;
+  licenseKey: string;
 };
 
 type Allocation = {
@@ -35,10 +38,19 @@ type Employee = {
   fullName: string;
 };
 
+type Field = {
+  name: string;
+  label: string;
+  type: string;
+  options?: string[];
+  readOnly?: boolean;
+};
+
 export default function AssetPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  const [error, setError] = useState<string | null>(null);
   const [asset, setAsset] = useState<Asset | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [form, setForm] = useState<Partial<Asset>>({});
@@ -46,6 +58,13 @@ export default function AssetPage() {
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [me, setMe] = useState<{ id: number; role: string } | null>(null);
+
+  const isPhysical = ["HARDWARE", "ACCESSORY"].includes(
+    form.assetCategory ?? "",
+  );
+  const isDigital = ["SOFTWARE", "AI_SUBSCRIPTION", "SAAS_TOOL"].includes(
+    form.assetCategory ?? "",
+  );
 
   const [allocateForm, setAllocateForm] = useState({
     assignedEmployeeId: 0,
@@ -87,12 +106,52 @@ export default function AssetPage() {
     { name: "status", label: "Status", type: "text", readOnly: true },
     { name: "brandVendor", label: "Brand / Vendor", type: "text" },
     { name: "modelPlan", label: "Model / Plan", type: "text" },
-    { name: "locationOwner", label: "Location / Owner", type: "text" },
+    { name: "purchaseDate", label: "Purchase Date", type: "date" },
+  ];
+
+  const physicalFields = [
     { name: "serialNumber", label: "Serial Number", type: "text" },
     { name: "macAddress", label: "MAC Address", type: "text" },
     { name: "assetTag", label: "Asset Tag", type: "text" },
-    { name: "purchaseDate", label: "Purchase Date", type: "date" },
   ];
+
+  const digitalFields = [
+    { name: "planLicenseType", label: "Plan / License Type", type: "text" },
+    { name: "totalSeats", label: "Total Seats", type: "number" },
+    { name: "renewalDate", label: "Renewal Date", type: "date" },
+    { name: "accountOwner", label: "Account Owner", type: "text" },
+    { name: "licenseKey", label: "License Key", type: "text" },
+  ];
+
+  const activeFields: Field[] = [
+    ...fields,
+    ...(isPhysical ? physicalFields : []),
+    ...(isDigital ? digitalFields : []),
+  ];
+
+  const mapAssets = (asset: any) => ({
+    assetName: asset.assetName ?? "",
+    assetCategory: asset.assetCategory ?? "",
+    assetType: asset.assetType ?? "",
+    brandVendor: asset.brandVendor ?? "",
+    modelPlan: asset.modelPlan ?? "",
+    status: asset.status ?? "",
+    purchaseDate: asset.purchaseDate
+      ? new Date(asset.purchaseDate).toISOString().split("T")[0]
+      : "",
+    planLicenseType: asset.digitalSubscription?.planLicenseType ?? "",
+    totalSeats: asset.digitalSubscription?.totalSeats ?? "",
+    renewalDate: asset.digitalSubscription?.renewalDate
+      ? new Date(asset.digitalSubscription.renewalDate)
+          .toISOString()
+          .split("T")[0]
+      : "",
+    accountOwner: asset.digitalSubscription?.accountOwner ?? "",
+    licenseKey: asset.digitalSubscription?.licenseKey ?? "",
+    serialNumber: asset.physicalAsset?.serialNumber ?? "",
+    macAddress: asset.physicalAsset?.macAddress ?? "",
+    assetTag: asset.physicalAsset?.assetTag ?? "",
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -101,8 +160,8 @@ export default function AssetPage() {
         await apiFetch("/auth/me"),
         await apiFetch(`/allocations/asset/${id}`),
       ]);
-      setAsset(asset);
-      setForm(asset);
+      setAsset(mapAssets(asset));
+      setForm(mapAssets(asset));
       setCurrentUserRole(me.role);
       setMe(me);
       setAllocations(allocaionHistory);
@@ -123,19 +182,23 @@ export default function AssetPage() {
   }
 
   async function handleUpdate() {
+    if (!confirm("Save changes?")) return;
     try {
       const updated = await apiFetch(`/assets/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
       });
-      setAsset(updated);
+      setAsset(mapAssets(updated));
+      console.log(asset);
       setEditing(false);
+      setError(null);
     } catch (err: any) {
-      console.log(err.message);
+      setError(err.message);
     }
   }
 
   async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this employee?")) return;
     await apiFetch(`/assets/${id}`, {
       method: "DELETE",
     });
@@ -187,44 +250,60 @@ export default function AssetPage() {
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
-        {fields.map((field) => (
-          <div key={field.name}>
-            <label className="text-sm text-gray-500 mb-1">{field.label}</label>
-            {editing && !field.readOnly ? (
-              field.type === "select" ? (
-                <select
-                  name={field.name}
-                  value={form[field.name as keyof typeof form]}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
-                >
-                  <option value="">Select {field.label}</option>
-                  {field.options?.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+        {activeFields.map((field) => {
+          const value = editing
+            ? form[field.name as keyof typeof form]
+            : asset[field.name as keyof Asset];
+
+          if (
+            !editing &&
+            (value === null || value === undefined || value === "")
+          ) {
+            return null;
+          }
+          return (
+            <div key={field.name}>
+              <label className="text-sm text-gray-500 mb-1">
+                {field.label}
+              </label>
+              {editing && !field.readOnly ? (
+                field.type === "select" ? (
+                  <select
+                    name={field.name}
+                    value={form[field.name as keyof typeof form]}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
+                  >
+                    <option value="">Select {field.label}</option>
+                    {field.options?.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    name={field.name}
+                    value={form[field.name as keyof typeof form] ?? ""}
+                    onChange={handleChange}
+                    type={field.type}
+                    className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
+                  />
+                )
               ) : (
-                <input
-                  name={field.name}
-                  value={form[field.name as keyof typeof form]}
-                  onChange={handleChange}
-                  type={field.type}
-                  className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
-                />
-              )
-            ) : (
-              <p className="text-sm text-gray-300">
-                {field.type === "date"
-                  ? new Date(
-                      asset[field.name as keyof Asset] as string,
-                    ).toLocaleDateString()
-                  : asset[field.name as keyof Asset]}
-              </p>
-            )}
-          </div>
-        ))}
+                <p className="text-sm text-gray-300">
+                  {field.type === "date" && value
+                    ? new Date(
+                        asset[field.name as keyof Asset] as string,
+                      ).toLocaleDateString()
+                    : asset[field.name as keyof Asset]}
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        {error && <p className="text-xs text-red-400">{error}</p>}
 
         <div className="flex gap-2 pt-2">
           {editing ? (
