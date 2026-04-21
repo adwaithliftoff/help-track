@@ -58,7 +58,7 @@ model PhysicalAsset {
   macAddress   String? @unique
   assetTag     String? @unique
 
-  asset Asset @relation(fields: [assetId], references: [id])
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@map("physical_assets")
 }
@@ -74,7 +74,7 @@ model DigitalSubscription {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  asset Asset @relation(fields: [assetId], references: [id])
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@map("digital_subscriptions")
 }
