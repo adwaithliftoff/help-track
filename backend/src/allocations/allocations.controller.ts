@@ -12,22 +12,22 @@ import { AllocationsService } from './allocations.service';
 import { CreateAllocationDto } from './dto/create-allocation.dto';
 import { ReturnAllocationDto } from './dto/return-allocation.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
 import { SelfGuard } from 'src/auth/guards/self.guard';
+import { ClaimsGuard } from 'src/auth/guards/claims.guard';
+import { RequirePermissions } from 'src/auth/claims.decorator';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, ClaimsGuard)
 @Controller('allocations')
 export class AllocationsController {
   constructor(private readonly allocationsService: AllocationsService) {}
 
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @RequirePermissions('ALLOCATION_CREATE')
   @Post()
   allocate(@Body() createAllocationDto: CreateAllocationDto) {
     return this.allocationsService.allocate(createAllocationDto);
   }
 
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @RequirePermissions('ALLOCATION_UPDATE')
   @Patch(':id/return')
   return(
     @Param('id', ParseIntPipe) id: number,
@@ -36,7 +36,7 @@ export class AllocationsController {
     return this.allocationsService.return(id, dto);
   }
 
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @RequirePermissions('ALLOCATION_READ')
   @Get('asset/:id')
   getByAsset(@Param('id', ParseIntPipe) id: number) {
     return this.allocationsService.getByAsset(id);

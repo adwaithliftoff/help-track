@@ -100,6 +100,13 @@ model AllocationHistory {
   @@map("allocation_history")
 }
 
+model RolePermission {
+  role       RoleName
+  permission Permission
+
+  @@id([role, permission])
+}
+
 enum EmployeeStatus {
   ACTIVE
   INACTIVE
@@ -110,6 +117,22 @@ enum RoleName {
   EMPLOYEE
   ADMIN
   SUPER_ADMIN
+}
+
+enum Permission {
+  EMPLOYEE_CREATE
+  EMPLOYEE_READ
+  EMPLOYEE_UPDATE
+  EMPLOYEE_DELETE
+
+  ASSET_CREATE
+  ASSET_READ
+  ASSET_UPDATE
+  ASSET_DELETE
+
+  ALLOCATION_CREATE
+  ALLOCATION_READ
+  ALLOCATION_UPDATE
 }
 
 enum AssetStatus {

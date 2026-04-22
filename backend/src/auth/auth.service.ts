@@ -1,19 +1,19 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { EmployeesService } from 'src/employees/employees.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { PrismaService } from 'src/prisma.service';
+import { RoleName } from 'generated/prisma/enums';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly employeesService: EmployeesService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async login(dto: LoginDto, res: Response) {
@@ -22,7 +22,9 @@ export class AuthService {
     const match = await bcrypt.compare(dto.password, user.password);
     if (!match) throw new UnauthorizedException('Invalid Credentials');
 
-    const payload = { sub: user.id, role: user.role };
+    const permissions = await this.getPermissions(user.role);
+
+    const payload = { sub: user.id, role: user.role, permissions };
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET,
@@ -67,7 +69,7 @@ export class AuthService {
       if (!accessSecret)
         throw new UnauthorizedException('Missing access secret');
       const accessToken = jwt.sign(
-        { sub: payload.sub, role: payload.role },
+        { sub: payload.sub, role: payload.role, permissions: payload.permissions },
         accessSecret,
         { expiresIn: '5m' },
       );
@@ -92,5 +94,12 @@ export class AuthService {
   async me(userId: number) {
     const user = this.employeesService.findOne(userId);
     return user;
+  }
+
+  private async getPermissions(role: RoleName) {
+    const rolePermissions = await this.prisma.rolePermission.findMany({
+      where: { role },
+    });
+    return rolePermissions.map((rolePermission) => rolePermission.permission);
   }
 }

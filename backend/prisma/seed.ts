@@ -1,4 +1,4 @@
-import { PrismaClient } from 'generated/prisma/client';
+import { Permission, PrismaClient, RoleName } from 'generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 
@@ -22,6 +22,27 @@ async function main() {
     },
   });
   console.log('Admin user created');
+
+  const allPermissions = Object.values(Permission);
+
+  const rolePermissions = [
+    ...allPermissions.map((permission) => ({
+      role: RoleName.SUPER_ADMIN,
+      permission,
+    })),
+
+    ...allPermissions.map((permission) => ({
+      role: RoleName.ADMIN,
+      permission,
+    })),
+  ];
+
+  await prisma.rolePermission.createMany({
+    data: rolePermissions,
+    skipDuplicates: true,
+  });
+
+  console.log('Seeded role permissions');
 }
 
 main()

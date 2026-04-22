@@ -12,22 +12,22 @@ import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
 import { SelfGuard } from 'src/auth/guards/self.guard';
+import { ClaimsGuard } from 'src/auth/guards/claims.guard';
+import { RequirePermissions } from 'src/auth/claims.decorator';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, ClaimsGuard)
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @RequirePermissions('EMPLOYEE_CREATE')
   @Post()
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeesService.create(createEmployeeDto);
   }
 
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @RequirePermissions('EMPLOYEE_READ')
   @Get()
   findAll() {
     return this.employeesService.findAll();
@@ -39,7 +39,7 @@ export class EmployeesController {
     return this.employeesService.findOne(+id);
   }
 
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @RequirePermissions('EMPLOYEE_UPDATE')
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -48,7 +48,7 @@ export class EmployeesController {
     return this.employeesService.update(+id, updateEmployeeDto);
   }
 
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @RequirePermissions('EMPLOYEE_DELETE')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.employeesService.remove(+id);
