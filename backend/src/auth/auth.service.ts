@@ -69,7 +69,11 @@ export class AuthService {
       if (!accessSecret)
         throw new UnauthorizedException('Missing access secret');
       const accessToken = jwt.sign(
-        { sub: payload.sub, role: payload.role, permissions: payload.permissions },
+        {
+          sub: payload.sub,
+          role: payload.role,
+          permissions: payload.permissions,
+        },
         accessSecret,
         { expiresIn: '5m' },
       );

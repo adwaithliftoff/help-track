@@ -16,17 +16,19 @@ import { SelfGuard } from 'src/auth/guards/self.guard';
 import { ClaimsGuard } from 'src/auth/guards/claims.guard';
 import { RequirePermissions } from 'src/auth/claims.decorator';
 
-@UseGuards(JwtAuthGuard, ClaimsGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_CREATE')
   @Post()
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeesService.create(createEmployeeDto);
   }
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_READ')
   @Get()
   findAll() {
@@ -34,11 +36,13 @@ export class EmployeesController {
   }
 
   @UseGuards(SelfGuard)
+  @RequirePermissions('EMPLOYEE_READ')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.employeesService.findOne(+id);
   }
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_UPDATE')
   @Patch(':id')
   update(
@@ -48,6 +52,7 @@ export class EmployeesController {
     return this.employeesService.update(+id, updateEmployeeDto);
   }
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_DELETE')
   @Delete(':id')
   remove(@Param('id') id: string) {

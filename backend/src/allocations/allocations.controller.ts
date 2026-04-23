@@ -16,17 +16,19 @@ import { SelfGuard } from 'src/auth/guards/self.guard';
 import { ClaimsGuard } from 'src/auth/guards/claims.guard';
 import { RequirePermissions } from 'src/auth/claims.decorator';
 
-@UseGuards(JwtAuthGuard, ClaimsGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('allocations')
 export class AllocationsController {
   constructor(private readonly allocationsService: AllocationsService) {}
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('ALLOCATION_CREATE')
   @Post()
   allocate(@Body() createAllocationDto: CreateAllocationDto) {
     return this.allocationsService.allocate(createAllocationDto);
   }
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('ALLOCATION_UPDATE')
   @Patch(':id/return')
   return(
@@ -36,6 +38,7 @@ export class AllocationsController {
     return this.allocationsService.return(id, dto);
   }
 
+  @UseGuards(ClaimsGuard)
   @RequirePermissions('ALLOCATION_READ')
   @Get('asset/:id')
   getByAsset(@Param('id', ParseIntPipe) id: number) {
@@ -43,6 +46,7 @@ export class AllocationsController {
   }
 
   @UseGuards(SelfGuard)
+  @RequirePermissions('ALLOCATION_READ')
   @Get('employee/:id')
   getByEmployee(@Param('id', ParseIntPipe) id: number) {
     return this.allocationsService.getByEmployee(id);
