@@ -30,6 +30,10 @@ model Employee {
   allocations     AllocationHistory[] @relation("AssignedEmployee")
   allocatedBy     AllocationHistory[] @relation("AllocatedByAdmin")
   receivedReturns AllocationHistory[] @relation("ReceivingAdmin")
+  createdTickets  Ticket[]            @relation("TicketCreator")
+  assignedTickets Ticket[]            @relation("TicketAssignee")
+  linkedTickets   Ticket[]            @relation("TicketLinkedEmployee")
+  ticketComments  TicketComment[]
 }
 
 model Asset {
@@ -47,6 +51,7 @@ model Asset {
   allocations         AllocationHistory[]
   physicalAsset       PhysicalAsset?
   digitalSubscription DigitalSubscription?
+  tickets             Ticket[]
 
   @@map("assets")
 }
@@ -107,6 +112,44 @@ model RolePermission {
   @@id([role, permission])
 }
 
+model Ticket {
+  id               Int            @id @default(autoincrement())
+  title            String
+  description      String
+  category         TicketCategory
+  priority         TicketPriority @default(MEDIUM)
+  status           TicketStatus   @default(OPEN)
+  creatorId        Int
+  assigneeId       Int?
+  linkedEmployeeId Int?
+  linkedAssetId    Int?
+  attachments      String[]
+  resolutionNote   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  creator        Employee        @relation("TicketCreator", fields: [creatorId], references: [id])
+  assignee       Employee?       @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  linkedEmployee Employee?       @relation("TicketLinkedEmployee", fields: [linkedEmployeeId], references: [id])
+  linkedAsset    Asset?          @relation(fields: [linkedAssetId], references: [id])
+  comments       TicketComment[]
+
+  @@map("tickets")
+}
+
+model TicketComment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  updaterId Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  ticket  Ticket   @relation(fields: [ticketId], references: [id])
+  updater Employee @relation(fields: [updaterId], references: [id])
+
+  @@map("ticket_comments")
+}
+
 enum EmployeeStatus {
   ACTIVE
   INACTIVE
@@ -159,4 +202,29 @@ enum ReturnCondition {
   GOOD
   FAIR
   DAMAGED
+}
+
+enum TicketCategory {
+  HARDWARE_ISSUE
+  SOFTWARE_ISSUE
+  ACCESS_ISSUE
+  ASSET_REQUEST
+  SUBSCRIPTION_ISSUE
+  GENERAL_SUPPORT
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_USER
+  RESOLVED
+  CLOSED
+  REOPENED
 }
