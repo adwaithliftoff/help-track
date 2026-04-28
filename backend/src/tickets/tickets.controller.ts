@@ -16,6 +16,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ManageTicketDto } from './dto/manage-ticket.dto';
 import { ClaimsGuard } from 'src/auth/guards/claims.guard';
 import { RequirePermissions } from 'src/auth/claims.decorator';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('tickets')
@@ -58,5 +59,24 @@ export class TicketsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ticketsService.remove(+id);
+  }
+
+  @Post(':id/comments')
+  postComment(
+    @Body() createCommentDto: CreateCommentDto,
+    @Param('id') id: string,
+    @Req() req,
+  ) {
+    return this.ticketsService.addComment(
+      +id,
+      createCommentDto,
+      req.user.sub,
+      req.user.role,
+    );
+  }
+
+  @Get(':id/comments')
+  getComments(@Param('id') id: string, @Req() req) {
+    return this.ticketsService.getComments(+id, req.user.sub, req.user.role);
   }
 }

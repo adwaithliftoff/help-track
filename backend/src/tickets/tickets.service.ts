@@ -8,6 +8,7 @@ import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { PrismaService } from 'src/prisma.service';
 import { ManageTicketDto } from './dto/manage-ticket.dto';
 import { RoleName } from 'generated/prisma/enums';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class TicketsService {
@@ -70,5 +71,40 @@ export class TicketsService {
 
   remove(id: number) {
     return this.prisma.ticket.delete({ where: { id } });
+  }
+
+  async addComment(
+    ticketId: number,
+    createCommentDto: CreateCommentDto,
+    updaterId: number,
+    role: string,
+  ) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id: ticketId },
+    });
+    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (role === 'EMPLOYEE' && ticket.creatorId !== updaterId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.prisma.ticketComment.create({
+      data: {
+        ...createCommentDto,
+        ticketId,
+        updaterId,
+      },
+    });
+  }
+
+  async getComments(id: number, updaterId: number, role: string) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+    });
+    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (role === 'EMPLOYEE' && ticket.creatorId !== updaterId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return this.prisma.ticketComment.findMany({
+      where: { ticketId: id },
+    });
   }
 }
