@@ -13,13 +13,20 @@ import { RoleName } from 'generated/prisma/enums';
 export class TicketsService {
   constructor(private prisma: PrismaService) {}
 
+  private ticketInclude = {
+    creator: { select: { fullName: true } },
+    assignee: { select: { fullName: true } },
+    linkedEmployee: { select: { fullName: true } },
+    linkedAsset: { select: { assetName: true } },
+  } as const;
+
   create(createTicketDto: CreateTicketDto, userId: number) {
     return this.prisma.ticket.create({
       data: { ...createTicketDto, creatorId: userId },
     });
   }
 
-  findAll(id, role) {
+  findAll(id: number, role: RoleName) {
     if (role === 'EMPLOYEE') {
       return this.prisma.ticket.findMany({ where: { creatorId: id } });
     }
@@ -27,7 +34,10 @@ export class TicketsService {
   }
 
   async findOne(id: number, userId, role: RoleName) {
-    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: this.ticketInclude,
+    });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
     if (role === 'EMPLOYEE') {
       if (ticket.creatorId !== userId)
@@ -36,13 +46,14 @@ export class TicketsService {
     return ticket;
   }
 
-  async update(id: number, updateTicketDto: UpdateTicketDto, userId) {
+  async update(id: number, updateTicketDto: UpdateTicketDto, userId: number) {
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
     if (ticket.creatorId === userId) {
       return this.prisma.ticket.update({
         where: { id },
         data: { ...updateTicketDto },
+        include: this.ticketInclude,
       });
     }
     console.log(ticket.creatorId, userId);
@@ -53,6 +64,7 @@ export class TicketsService {
     return this.prisma.ticket.update({
       where: { id },
       data: { ...manageTicketDto },
+      include: this.ticketInclude,
     });
   }
 

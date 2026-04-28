@@ -16,7 +16,8 @@ export default async function proxy(req: NextRequest) {
     const role = payload.role;
     const id = payload.sub;
     if (role === "EMPLOYEE") {
-      if (pathname === `/employees/${id}`) {
+      const allowedRoutes = [`/employees/${id}`, "/tickets"];
+      if (allowedRoutes.some((route) => pathname.startsWith(route))) {
         return NextResponse.next();
       }
       return NextResponse.redirect(new URL(`/employees/${id}`, req.nextUrl));
