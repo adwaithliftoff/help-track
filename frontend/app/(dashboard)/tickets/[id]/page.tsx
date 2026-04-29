@@ -3,6 +3,7 @@
 import { apiFetch } from "@/lib/api";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import TicketComments from "./TicketComments";
 
 type Ticket = {
   id: number;
@@ -78,6 +79,7 @@ export default function TicketPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [managing, setManaging] = useState(false);
   const [me, setMe] = useState<{ id: number; role: string } | null>(null);
+  const [comments, setComments] = useState([]);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -99,12 +101,14 @@ export default function TicketPage() {
       setLoading(true);
       setError(null);
       try {
-        const [ticketData, meData] = await Promise.all([
+        const [ticketData, meData, commentsData] = await Promise.all([
           apiFetch(`/tickets/${id}`),
           apiFetch("/auth/me"),
+          apiFetch(`/tickets/${id}/comments`),
         ]);
         setTicket(ticketData);
         setMe(meData);
+        setComments(commentsData);
         setForm({
           title: ticketData.title ?? "",
           description: ticketData.description ?? "",
@@ -195,6 +199,11 @@ export default function TicketPage() {
     } catch (err: any) {
       setError(err);
     }
+  }
+
+  async function fetchComments() {
+    const data = await apiFetch(`/tickets/${id}/comments`);
+    setComments(data);
   }
 
   const rawAttach = form.attachments ?? ticket?.attachments?.join(", ") ?? "";
@@ -595,6 +604,11 @@ export default function TicketPage() {
             )}
           </section>
         </div>
+        <TicketComments
+          ticketId={Number(id)}
+          comments={comments}
+          onCommentAdded={fetchComments}
+        ></TicketComments>
       </div>
     </div>
   );

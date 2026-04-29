@@ -105,6 +105,7 @@ export class TicketsService {
     }
     return this.prisma.ticketComment.findMany({
       where: { ticketId: id },
+      include: { updater: { select: { fullName: true } } },
     });
   }
 }
