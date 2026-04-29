@@ -604,11 +604,15 @@ export default function TicketPage() {
             )}
           </section>
         </div>
-        <TicketComments
-          ticketId={Number(id)}
-          comments={comments}
-          onCommentAdded={fetchComments}
-        ></TicketComments>
+        <div className="space-y-6">
+          <section className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <TicketComments
+              ticketId={Number(id)}
+              comments={comments}
+              onCommentAdded={fetchComments}
+            ></TicketComments>{" "}
+          </section>
+        </div>
       </div>
     </div>
   );

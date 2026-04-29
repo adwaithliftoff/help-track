@@ -2,23 +2,30 @@
 
 import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface User {
+  id: number;
   fullName: string;
   officialEmail: string;
+  role: "SUPER_ADMIN" | "ADMIN" | "EMPLOYEE";
 }
 
 export default function Sidebar() {
   const [user, setUser] = useState<User | null>(null);
   const [showLogout, setShowLogout] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isActive = (path: string) => pathname === path;
 
   useEffect(() => {
     apiFetch("/auth/me").then((data) => setUser(data));
   }, []);
 
   async function handleLogout() {
+    if (!confirm("Logout?")) return;
     await apiFetch("/auth/logout", {
       method: "POST",
     });
@@ -39,33 +46,67 @@ export default function Sidebar() {
         <p className="px-3 pt-3 pb-1 text-xs text-gray-500 uppercase tracking-wide">
           Navigate
         </p>
-        <a
-          href="/"
-          className="px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+        {user?.role !== "EMPLOYEE" && (
+          <>
+            <Link
+              href="/"
+              className={`px-3 py-2 rounded-md text-sm ${
+                isActive("/")
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/employees"
+              className={`px-3 py-2 rounded-md text-sm ${
+                isActive("/employees")
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+              }`}
+            >
+              Employees
+            </Link>
+            <Link
+              href="/assets"
+              className={`px-3 py-2 rounded-md text-sm ${
+                isActive("/assets")
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+              }`}
+            >
+              Assets
+            </Link>
+          </>
+        )}
+        <Link
+          href="/tickets"
+          className={`px-3 py-2 rounded-md text-sm ${
+            isActive("/tickets")
+              ? "bg-gray-800 text-white"
+              : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+          }`}
         >
-          Dashboard
-        </a>
-        <a
-          href="/employees"
-          className="px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-100"
-        >
-          Employees
-        </a>
-        <a
-          href="/assets"
-          className="px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-100"
-        >
-          Assets
-        </a>
+          Tickets
+        </Link>
       </nav>
       <div className="px-3 py-4 border-t border-gray-800">
         {showLogout && (
-          <button
-            onClick={handleLogout}
-            className="mb-2 w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-800 rounded-md"
-          >
-            Logout
-          </button>
+          <>
+            <Link
+              href={`/employees/${user?.id}`}
+              className="mb-2 block w-full text-left px-3 py-2 text-sm hover:bg-gray-800 rounded-md"
+            >
+              Profile
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="mb-2 w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-800 rounded-md"
+            >
+              Logout
+            </button>
+          </>
         )}
 
         <button
