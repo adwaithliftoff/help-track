@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { AssetsService } from './assets.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
@@ -28,8 +29,13 @@ export class AssetsController {
 
   @RequirePermissions('ASSET_READ')
   @Get()
-  findAll() {
-    return this.assetsService.findAll();
+  findAll(
+    @Query('name') name?: string,
+    @Query('tag') tag?: string,
+    @Query('mac') mac?: string,
+    @Query('serial') serial?: string,
+  ) {
+    return this.assetsService.findAll(name, tag, mac, serial);
   }
 
   @RequirePermissions('ASSET_READ')

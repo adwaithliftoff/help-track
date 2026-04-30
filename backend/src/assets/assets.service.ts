@@ -54,8 +54,20 @@ export class AssetsService {
     });
   }
 
-  findAll() {
-    return this.prisma.asset.findMany();
+  findAll(assetName, assetTag, macAddress, serialNumber) {
+    return this.prisma.asset.findMany({
+      where: {
+        assetName: { contains: assetName, mode: 'insensitive' },
+        ...((assetTag || macAddress || serialNumber) && {
+          physicalAsset: {
+            assetTag: { contains: assetTag, mode: 'insensitive' },
+            macAddress: { contains: macAddress, mode: 'insensitive' },
+            serialNumber: { contains: serialNumber, mode: 'insensitive' },
+          },
+        }),
+      },
+      include: { digitalSubscription: true, physicalAsset: true },
+    });
   }
 
   async findOne(id: number) {

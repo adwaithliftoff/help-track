@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -31,8 +32,11 @@ export class EmployeesController {
   @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_READ')
   @Get()
-  findAll() {
-    return this.employeesService.findAll();
+  findAll(@Query('id') id?: string, @Query('name') name?: string) {
+    return this.employeesService.findAll(
+      id && Number(id) ? +id : undefined,
+      name,
+    );
   }
 
   @UseGuards(SelfGuard)

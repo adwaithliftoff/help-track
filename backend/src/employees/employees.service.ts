@@ -21,8 +21,14 @@ export class EmployeesService {
     });
   }
 
-  async findAll() {
-    return this.prisma.employee.findMany({ omit: { password: true } });
+  async findAll(employeeNumber, fullName) {
+    return this.prisma.employee.findMany({
+      where: {
+        employeeNumber,
+        fullName: { contains: fullName, mode: 'insensitive' },
+      },
+      omit: { password: true },
+    });
   }
 
   async findOne(id: number) {
