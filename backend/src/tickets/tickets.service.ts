@@ -7,7 +7,12 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { PrismaService } from 'src/prisma.service';
 import { ManageTicketDto } from './dto/manage-ticket.dto';
-import { RoleName } from 'generated/prisma/enums';
+import {
+  RoleName,
+  TicketCategory,
+  TicketPriority,
+  TicketStatus,
+} from 'generated/prisma/enums';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
@@ -27,11 +32,45 @@ export class TicketsService {
     });
   }
 
-  findAll(id: number, role: RoleName) {
+  findAll(
+    query: {
+      status?: string;
+      priority?: string;
+      category?: string;
+      assigneeId?: string;
+      employeeId?: string;
+      assetId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    },
+    id: number,
+    role: RoleName,
+  ) {
+    const where = {
+      ...(query.status && { status: query.status as TicketStatus }),
+      ...(query.priority && { priority: query.priority as TicketPriority }),
+      ...(query.category && { category: query.category as TicketCategory }),
+      ...(query.assigneeId && { assigneeId: Number(query.assigneeId) }),
+      ...(query.assetId && { linkedAssetId: Number(query.assetId) }),
+      ...(query.employeeId && { linkedEmployeeId: Number(query.employeeId) }),
+      ...(query.dateFrom || query.dateTo
+        ? {
+            createdAt: {
+              ...(query.dateFrom && { gte: new Date(query.dateFrom) }),
+              ...(query.dateTo && { lte: new Date(query.dateTo) }),
+            },
+          }
+        : {}),
+    };
     if (role === 'EMPLOYEE') {
-      return this.prisma.ticket.findMany({ where: { creatorId: id } });
+      return this.prisma.ticket.findMany({
+        where: {
+          creatorId: id,
+          ...where,
+        },
+      });
     }
-    return this.prisma.ticket.findMany();
+    return this.prisma.ticket.findMany({ where: { ...where } });
   }
 
   async findOne(id: number, userId, role: RoleName) {

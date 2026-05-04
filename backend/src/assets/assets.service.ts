@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { PrismaService } from 'src/prisma.service';
+import { AssetCategory, AssetStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class AssetsService {
@@ -54,15 +55,36 @@ export class AssetsService {
     });
   }
 
-  findAll(assetName, assetTag, macAddress, serialNumber) {
+  findAll(
+    assetName?,
+    assetTag?,
+    macAddress?,
+    serialNumber?,
+    assetCategory?,
+    assetType?,
+    status?,
+  ) {
     return this.prisma.asset.findMany({
       where: {
-        assetName: { contains: assetName, mode: 'insensitive' },
+        ...(assetName && {
+          assetName: { contains: assetName, mode: 'insensitive' },
+        }),
+        ...(assetCategory && { assetCategory: assetCategory }),
+        ...(assetType && {
+          assetType: { contains: assetType, mode: 'insensitive' },
+        }),
+        ...(status && { status: status }),
         ...((assetTag || macAddress || serialNumber) && {
           physicalAsset: {
-            assetTag: { contains: assetTag, mode: 'insensitive' },
-            macAddress: { contains: macAddress, mode: 'insensitive' },
-            serialNumber: { contains: serialNumber, mode: 'insensitive' },
+            ...(assetTag && {
+              assetTag: { contains: assetTag, mode: 'insensitive' },
+            }),
+            ...(macAddress && {
+              macAddress: { contains: macAddress, mode: 'insensitive' },
+            }),
+            ...(serialNumber && {
+              serialNumber: { contains: serialNumber, mode: 'insensitive' },
+            }),
           },
         }),
       },

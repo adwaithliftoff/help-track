@@ -34,8 +34,19 @@ export class AssetsController {
     @Query('tag') tag?: string,
     @Query('mac') mac?: string,
     @Query('serial') serial?: string,
+    @Query('category') category?: string,
+    @Query('type') type?: string,
+    @Query('status') status?: string,
   ) {
-    return this.assetsService.findAll(name, tag, mac, serial);
+    return this.assetsService.findAll(
+      name,
+      tag,
+      mac,
+      serial,
+      category,
+      type,
+      status,
+    );
   }
 
   @RequirePermissions('ASSET_READ')

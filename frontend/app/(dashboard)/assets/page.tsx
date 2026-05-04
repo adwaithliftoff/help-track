@@ -32,28 +32,39 @@ const statusColors: Record<string, string> = {
   RETIRED: "bg-gray-800 text-gray-400",
 };
 
+const initialFilters = {
+  name: "",
+  tag: "",
+  mac: "",
+  serial: "",
+  category: "",
+  type: "",
+  status: "",
+};
+
 export default function Assets() {
   const router = useRouter();
   const params = new URLSearchParams();
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [query, setQuery] = useState("");
-  const [debouncedQuery] = useDebounce(query, 500);
+  const [filters, setFilters] = useState(initialFilters);
+  const [debouncedFilters] = useDebounce(filters, 500);
 
   useEffect(() => {
     async function fetchAssets() {
-      const trimmedQuery = debouncedQuery.trim();
-      if (trimmedQuery) {
-        if (trimmedQuery.includes(":") || trimmedQuery.includes("-")) {
-          params.append("mac", trimmedQuery);
-        } else {
-          params.append("name", trimmedQuery);
+      Object.entries(debouncedFilters).forEach(([key, value]) => {
+        if (value.trim()) {
+          params.set(key, value.trim());
         }
-      }
+      });
       const data = await apiFetch(`/assets?${params.toString()}`);
       setAssets(data);
     }
     fetchAssets();
-  }, [debouncedQuery]);
+  }, [debouncedFilters]);
+
+  function handleClearFilters() {
+    setFilters(initialFilters);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,13 +81,142 @@ export default function Assets() {
         </button>
       </div>
 
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by name or MAC"
-        className="w-full bg-gray-800 text-gray-100 text-sm px-4 py-2 rounded-lg border border-gray-700 placeholder-gray-500 focus:outline-none focus:border-gray-500"
-      />
+      <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <label className="flex flex-col gap-2 md:col-span-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Asset name
+              </span>
+              <input
+                type="text"
+                value={filters.name}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Search by name"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none placeholder:text-gray-500
+  focus:border-gray-500"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Asset tag
+              </span>
+              <input
+                type="text"
+                value={filters.tag}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, tag: e.target.value }))
+                }
+                placeholder="Search by tag"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none placeholder:text-gray-500
+  focus:border-gray-500"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Serial number
+              </span>
+              <input
+                type="text"
+                value={filters.serial}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, serial: e.target.value }))
+                }
+                placeholder="Search by serial"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none placeholder:text-gray-500
+  focus:border-gray-500"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                MAC address
+              </span>
+              <input
+                type="text"
+                value={filters.mac}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, mac: e.target.value }))
+                }
+                placeholder="Search by MAC"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none placeholder:text-gray-500
+  focus:border-gray-500"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Category
+              </span>
+              <select
+                value={filters.category}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, category: e.target.value }))
+                }
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none focus:border-gray-500"
+              >
+                <option value="">All</option>
+                <option value="HARDWARE">Hardware</option>
+                <option value="ACCESSORY">Accessory</option>
+                <option value="SOFTWARE">Software</option>
+                <option value="AI_SUBSCRIPTION">AI Subscription</option>
+                <option value="SAAS_TOOL">SaaS Tool</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Type
+              </span>
+              <input
+                type="text"
+                value={filters.type}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, type: e.target.value }))
+                }
+                placeholder="Filter by type"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none placeholder:text-gray-500
+  focus:border-gray-500"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Status
+              </span>
+              <select
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, status: e.target.value }))
+                }
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none focus:border-gray-500"
+              >
+                <option value="">All</option>
+                <option value="INVENTORY">Inventory</option>
+                <option value="ALLOCATED">Allocated</option>
+                <option value="UNDER_MAINTENANCE">Under maintenance</option>
+                <option value="RETURNED">Returned</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="LOST">Lost</option>
+                <option value="RETIRED">Retired</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleClearFilters}
+              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+            >
+              Clear filters
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="bg-gray-900 rounded-lg overflow-hidden">
         <table className="w-full text-sm">

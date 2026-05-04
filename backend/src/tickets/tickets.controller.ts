@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -29,8 +30,21 @@ export class TicketsController {
   }
 
   @Get()
-  findAll(@Req() req) {
-    return this.ticketsService.findAll(req.user.sub, req.user.role);
+  findAll(
+    @Query()
+    query: {
+      status?: string;
+      priority?: string;
+      category?: string;
+      assigneeId?: string;
+      employeeId?: string;
+      assetId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    },
+    @Req() req,
+  ) {
+    return this.ticketsService.findAll(query, req.user.sub, req.user.role);
   }
 
   @Get(':id')
