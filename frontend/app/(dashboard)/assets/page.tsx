@@ -1,9 +1,9 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 
 type Asset = {
   id: number;
@@ -34,14 +34,26 @@ const statusColors: Record<string, string> = {
 
 export default function Assets() {
   const router = useRouter();
+  const params = new URLSearchParams();
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery] = useDebounce(query, 500);
+
   useEffect(() => {
     async function fetchAssets() {
-      const data = await apiFetch("/assets");
+      const trimmedQuery = debouncedQuery.trim();
+      if (trimmedQuery) {
+        if (trimmedQuery.includes(":") || trimmedQuery.includes("-")) {
+          params.append("mac", trimmedQuery);
+        } else {
+          params.append("name", trimmedQuery);
+        }
+      }
+      const data = await apiFetch(`/assets?${params.toString()}`);
       setAssets(data);
     }
     fetchAssets();
-  }, []);
+  }, [debouncedQuery]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,6 +69,14 @@ export default function Assets() {
           + Add Asset
         </button>
       </div>
+
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by name or MAC"
+        className="w-full bg-gray-800 text-gray-100 text-sm px-4 py-2 rounded-lg border border-gray-700 placeholder-gray-500 focus:outline-none focus:border-gray-500"
+      />
 
       <div className="bg-gray-900 rounded-lg overflow-hidden">
         <table className="w-full text-sm">

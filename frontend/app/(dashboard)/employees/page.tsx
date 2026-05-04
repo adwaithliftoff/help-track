@@ -3,6 +3,7 @@
 import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 
 type Employee = {
   id: number;
@@ -24,14 +25,25 @@ const statusColors: Record<string, string> = {
 
 export default function Employees() {
   const router = useRouter();
+  const params = new URLSearchParams();
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery] = useDebounce(query, 500);
+
   useEffect(() => {
     async function fetchEmployees() {
-      const data = await apiFetch("/employees");
+      const trimmedQuery = debouncedQuery.trim();
+      if (trimmedQuery) {
+        const isNumber = /^\d+$/.test(trimmedQuery);
+        isNumber
+          ? params.append("id", trimmedQuery)
+          : params.append("name", trimmedQuery);
+      }
+      const data = await apiFetch(`/employees?${params.toString()}`);
       setEmployees(data);
     }
     fetchEmployees();
-  }, []);
+  }, [debouncedQuery]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,6 +59,15 @@ export default function Employees() {
           + Add Employee
         </button>
       </div>
+
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by employee number or name..."
+        className="w-full bg-gray-800 text-gray-100 text-sm px-4 py-2 rounded-lg border border-gray-700 placeholder-gray-500 focus:outline-none focus:border-gray-500"
+      />
+
       <div className="bg-gray-900 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
