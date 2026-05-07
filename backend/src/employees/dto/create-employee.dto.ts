@@ -21,8 +21,8 @@ export class CreateEmployeeDto {
   @IsString()
   password: string;
 
-  @IsString()
-  department: string;
+  @IsInt()
+  departmentId: number;
 
   @IsString()
   designation: string;

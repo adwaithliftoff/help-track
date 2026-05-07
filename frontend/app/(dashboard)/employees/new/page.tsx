@@ -13,7 +13,7 @@ export default function NewEmployee() {
     fullName: "",
     officialEmail: "",
     password: "",
-    department: "",
+    departmentId: "",
     designation: "",
     joiningDate: "",
   });
@@ -31,6 +31,7 @@ export default function NewEmployee() {
         body: JSON.stringify({
           ...form,
           employeeNumber: Number(form.employeeNumber),
+          departmentId: Number(form.departmentId),
         }),
       });
       router.push("/employees");
@@ -46,7 +47,7 @@ export default function NewEmployee() {
     { name: "fullName", label: "Full Name", type: "text" },
     { name: "officialEmail", label: "Official Email", type: "email" },
     { name: "password", label: "Password", type: "password" },
-    { name: "department", label: "Department", type: "text" },
+    { name: "departmentId", label: "Department", type: "text" },
     { name: "designation", label: "Designation", type: "text" },
     { name: "joiningDate", label: "Joining Date", type: "date" },
   ];

@@ -14,7 +14,7 @@ async function main() {
       fullName: 'Admin',
       officialEmail: 'admin@example.com',
       password: await bcrypt.hash('password', 10),
-      department: 'Admin',
+      departmentId: 1,
       designation: 'Admin',
       joiningDate: new Date(),
       status: 'ACTIVE',

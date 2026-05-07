@@ -10,7 +10,9 @@ type Employee = {
   employeeNumber: number;
   fullName: string;
   officialEmail: string;
-  department: string;
+  department: {
+    name: string;
+  };
   designation: string;
   joiningDate: string;
   status: string;
@@ -95,7 +97,7 @@ export default function Employees() {
                   </p>
                 </td>
                 <td className="px-4 py-3 text-gray-400">
-                  {employee.department}
+                  {employee.department.name}
                 </td>
                 <td className="px-4 py-3 text-gray-400">
                   {employee.designation}

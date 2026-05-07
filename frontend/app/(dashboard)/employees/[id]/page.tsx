@@ -9,7 +9,8 @@ type Employee = {
   employeeNumber: number;
   fullName: string;
   officialEmail: string;
-  department: string;
+  department: { name: string };
+  departmentId: number;
   designation: string;
   joiningDate: string;
   status: string;
@@ -49,6 +50,7 @@ export default function EmployeePage() {
       readOnly: true,
     },
     { name: "department", label: "Department", type: "text" },
+    { name: "departmentId", label: "Department ID", type: "number" },
     { name: "designation", label: "Designation", type: "text" },
     { name: "joiningDate", label: "Joining Date", type: "date" },
     {
@@ -85,7 +87,10 @@ export default function EmployeePage() {
     try {
       const updated = await apiFetch(`/employees/${id}`, {
         method: "PATCH",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          departmentId: Number(form.departmentId),
+        }),
       });
       setEmployee(updated);
       setEditing(false);
@@ -122,7 +127,9 @@ export default function EmployeePage() {
               field.type === "select" ? (
                 <select
                   name={field.name}
-                  value={form[field.name as keyof typeof form]}
+                  value={
+                    (form[field.name as keyof typeof form] as string) ?? ""
+                  }
                   onChange={handleChange}
                   className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
                 >
@@ -136,7 +143,9 @@ export default function EmployeePage() {
               ) : (
                 <input
                   name={field.name}
-                  value={form[field.name as keyof typeof form]}
+                  value={
+                    (form[field.name as keyof typeof form] as string) ?? ""
+                  }
                   onChange={handleChange}
                   type={field.type}
                   className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
@@ -148,7 +157,9 @@ export default function EmployeePage() {
                   ? new Date(
                       employee[field.name as keyof Employee] as string,
                     ).toLocaleDateString()
-                  : employee[field.name as keyof Employee]}
+                  : field.name === "department"
+                    ? (employee.department?.name ?? "-")
+                    : String(employee[field.name as keyof Employee] ?? "-")}
               </p>
             )}
           </div>

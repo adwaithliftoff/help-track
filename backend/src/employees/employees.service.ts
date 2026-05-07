@@ -28,6 +28,7 @@ export class EmployeesService {
         fullName: { contains: fullName, mode: 'insensitive' },
       },
       omit: { password: true },
+      include: { department: true },
     });
   }
 
@@ -35,6 +36,7 @@ export class EmployeesService {
     return this.prisma.employee.findUnique({
       where: { id },
       omit: { password: true },
+      include: { department: true },
     });
   }
 

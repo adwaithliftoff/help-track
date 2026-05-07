@@ -19,7 +19,7 @@ model Employee {
   fullName       String
   officialEmail  String         @unique
   password       String
-  department     String
+  departmentId   Int
   designation    String
   joiningDate    DateTime
   status         EmployeeStatus @default(ACTIVE)
@@ -27,6 +27,7 @@ model Employee {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
+  department      Department?         @relation(fields: [departmentId], references: [id])
   allocations     AllocationHistory[] @relation("AssignedEmployee")
   allocatedBy     AllocationHistory[] @relation("AllocatedByAdmin")
   receivedReturns AllocationHistory[] @relation("ReceivingAdmin")
@@ -148,6 +149,13 @@ model TicketComment {
   updater Employee @relation(fields: [updaterId], references: [id])
 
   @@map("ticket_comments")
+}
+
+model Department {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  employees Employee[]
 }
 
 enum EmployeeStatus {
