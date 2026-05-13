@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/api";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import TicketComments from "./TicketComments";
+import { useAuth } from "@/providers/AuthProvider";
 
 type Ticket = {
   id: number;
@@ -72,13 +73,13 @@ export default function TicketPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id;
+  const me = useAuth();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [managing, setManaging] = useState(false);
-  const [me, setMe] = useState<{ id: number; role: string } | null>(null);
   const [comments, setComments] = useState([]);
   const [form, setForm] = useState({
     title: "",
@@ -101,13 +102,11 @@ export default function TicketPage() {
       setLoading(true);
       setError(null);
       try {
-        const [ticketData, meData, commentsData] = await Promise.all([
+        const [ticketData, commentsData] = await Promise.all([
           apiFetch(`/tickets/${id}`),
-          apiFetch("/auth/me"),
           apiFetch(`/tickets/${id}/comments`),
         ]);
         setTicket(ticketData);
-        setMe(meData);
         setComments(commentsData);
         setForm({
           title: ticketData.title ?? "",
@@ -130,7 +129,7 @@ export default function TicketPage() {
             : "",
           resolutionNote: ticketData.resolutionNote ?? "",
         });
-        if (meData.role === "ADMIN" || meData.role === "SUPER_ADMIN") {
+        if (me?.role === "ADMIN" || me?.role === "SUPER_ADMIN") {
           const employeeList = await apiFetch("/employees");
           setEmployees(employeeList);
         }

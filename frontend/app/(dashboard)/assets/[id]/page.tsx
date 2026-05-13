@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/providers/AuthProvider";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -49,19 +50,19 @@ type Field = {
 export default function AssetPage() {
   const { id } = useParams();
   const router = useRouter();
+  const me = useAuth();
 
   const [error, setError] = useState<string | null>(null);
   const [asset, setAsset] = useState<Asset | null>(null);
-  const [currentUserRole, setCurrentUserRole] = useState("");
   const [form, setForm] = useState<Partial<Asset>>({});
   const [editing, setEditing] = useState(false);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [me, setMe] = useState<{ id: number; role: string } | null>(null);
 
   const isPhysical = ["HARDWARE", "ACCESSORY"].includes(
     form.assetCategory ?? "",
   );
+
   const isDigital = ["SOFTWARE", "AI_SUBSCRIPTION", "SAAS_TOOL"].includes(
     form.assetCategory ?? "",
   );
@@ -153,20 +154,19 @@ export default function AssetPage() {
     assetTag: asset.physicalAsset?.assetTag ?? "",
   });
 
+  const isAdmin = me?.role === "ADMIN" || me?.role === "SUPER_ADMIN";
+
   useEffect(() => {
     async function fetchData() {
-      const [asset, me, allocaionHistory] = await Promise.all([
+      const [asset, allocaionHistory] = await Promise.all([
         await apiFetch(`/assets/${id}`),
-        await apiFetch("/auth/me"),
         await apiFetch(`/allocations/asset/${id}`),
       ]);
       setAsset(mapAssets(asset));
       setForm(mapAssets(asset));
-      setCurrentUserRole(me.role);
-      setMe(me);
       setAllocations(allocaionHistory);
 
-      if (me.role === "ADMIN" || me.role === "SUPER_ADMIN") {
+      if (isAdmin) {
         const employeeList = await apiFetch("/employees");
         setEmployees(employeeList);
       }
@@ -239,8 +239,6 @@ export default function AssetPage() {
     setAsset(updatedAsset);
     setAllocations(updatedAllocations);
   }
-  const isAdmin =
-    currentUserRole === "ADMIN" || currentUserRole === "SUPER_ADMIN";
 
   if (!asset) return;
   return (

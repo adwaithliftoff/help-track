@@ -51,6 +51,7 @@ export class EmployeesService {
     if (updateEmployeeDto.joiningDate) {
       data.joiningDate = new Date(updateEmployeeDto.joiningDate);
     }
+    data.tokenVersion = { increment: 1 };
     return this.prisma.employee.update({
       data,
       where: { id },

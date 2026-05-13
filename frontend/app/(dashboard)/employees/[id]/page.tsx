@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/providers/AuthProvider";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -34,9 +35,9 @@ type EmployeeAllocation = {
 export default function EmployeePage() {
   const { id } = useParams();
   const router = useRouter();
+  const me = useAuth();
 
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [currentUserRole, setCurrentUserRole] = useState("");
   const [form, setForm] = useState<Partial<Employee>>({});
   const [editing, setEditing] = useState(false);
   const [allocations, setAllocations] = useState<EmployeeAllocation[]>([]);
@@ -63,14 +64,12 @@ export default function EmployeePage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [employee, me, allocations] = await Promise.all([
+      const [employee, allocations] = await Promise.all([
         await apiFetch(`/employees/${id}`),
-        await apiFetch("/auth/me"),
         await apiFetch(`/allocations/employee/${id}`),
       ]);
       setEmployee(employee);
       setForm(employee);
-      setCurrentUserRole(me.role);
       setAllocations(allocations);
     }
     fetchData();
@@ -107,8 +106,7 @@ export default function EmployeePage() {
     router.push("/");
   }
 
-  const isAdmin =
-    currentUserRole === "ADMIN" || currentUserRole === "SUPER_ADMIN";
+  const isAdmin = me?.role === "ADMIN" || me?.role === "SUPER_ADMIN";
 
   const activeAllocations = allocations.filter((a) => !a.returnDate);
 

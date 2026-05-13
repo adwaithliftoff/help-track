@@ -1,28 +1,18 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface User {
-  id: number;
-  fullName: string;
-  officialEmail: string;
-  role: "SUPER_ADMIN" | "ADMIN" | "EMPLOYEE";
-}
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function Sidebar() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useAuth();
   const [showLogout, setShowLogout] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
-
-  useEffect(() => {
-    apiFetch("/auth/me").then((data) => setUser(data));
-  }, []);
 
   async function handleLogout() {
     if (!confirm("Logout?")) return;

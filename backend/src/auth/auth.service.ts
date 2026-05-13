@@ -5,7 +5,6 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -20,16 +19,27 @@ export class AuthService {
     const match = await bcrypt.compare(dto.password, user.password);
     if (!match) throw new UnauthorizedException('Invalid Credentials');
 
-    const payload = { sub: user.id, role: user.role };
+    const payload = {
+      sub: user.id,
+      role: user.role,
+      empNo: user.employeeNumber,
+      email: user.officialEmail,
+      name: user.fullName,
+      dept: user.departmentId,
+      version: user.tokenVersion,
+    };
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET,
         expiresIn: '5m',
       }),
-      this.jwtService.signAsync(payload, {
-        secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: '1d',
-      }),
+      this.jwtService.signAsync(
+        { sub: user.id },
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+          expiresIn: '1d',
+        },
+      ),
     ]);
     res.cookie('access_token', access_token, {
       httpOnly: true,
@@ -64,10 +74,18 @@ export class AuthService {
       const accessSecret = process.env.JWT_ACCESS_SECRET;
       if (!accessSecret)
         throw new UnauthorizedException('Missing access secret');
+      const user = await this.employeesService.findOne(payload.sub);
+      if (!user) throw new UnauthorizedException('User not found');
+
       const accessToken = jwt.sign(
         {
-          sub: payload.sub,
-          role: payload.role,
+          sub: user.id,
+          role: user.role,
+          empNo: user.employeeNumber,
+          email: user.officialEmail,
+          name: user.fullName,
+          dept: user.departmentId,
+          version: user.tokenVersion,
         },
         accessSecret,
         { expiresIn: '5m' },
@@ -88,10 +106,5 @@ export class AuthService {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     return { message: 'Logged out' };
-  }
-
-  async me(userId: number) {
-    const user = this.employeesService.findOne(userId);
-    return user;
   }
 }

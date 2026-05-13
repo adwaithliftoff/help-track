@@ -1,19 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { type Request, type Response } from 'express';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-
-type JwtUser = { sub: number; role: 'EMPLOYEE' | 'ADMIN' | 'SUPER_ADMIN' };
-type AuthenticatedRequest = Request & { user: JwtUser };
 
 @Controller('auth')
 export class AuthController {
@@ -38,11 +26,5 @@ export class AuthController {
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     return this.authService.logout(res);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  async me(@Req() req: AuthenticatedRequest) {
-    return this.authService.me(req.user.sub);
   }
 }

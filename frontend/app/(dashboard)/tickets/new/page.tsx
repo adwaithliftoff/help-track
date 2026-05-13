@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -15,6 +16,7 @@ type Allocation = {
 
 export default function NewTicket() {
   const router = useRouter();
+  const me = useAuth();
   const [assets, setAssets] = useState<Allocation[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -27,8 +29,7 @@ export default function NewTicket() {
 
   useEffect(() => {
     async function fetchData() {
-      const me = await apiFetch("/auth/me");
-      const data = await apiFetch(`/allocations/employee/${me.id}`);
+      const data = await apiFetch(`/allocations/employee/${me?.id}`);
       setAssets(data);
     }
     fetchData();
@@ -48,7 +49,8 @@ export default function NewTicket() {
       await apiFetch("/tickets", {
         method: "POST",
         body: JSON.stringify({
-          ...form, linkedAssetId : Number(form.linkedAssetId)
+          ...form,
+          linkedAssetId: Number(form.linkedAssetId),
         }),
       });
       router.push("/tickets");
