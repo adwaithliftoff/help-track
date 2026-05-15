@@ -18,6 +18,7 @@ export default function NewTicket() {
   const router = useRouter();
   const me = useAuth();
   const [assets, setAssets] = useState<Allocation[]>([]);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "",
@@ -46,12 +47,21 @@ export default function NewTicket() {
   async function handleSubmit() {
     setError(null);
     try {
+      const fd = new FormData();
+      fd.append("title", form.title);
+      fd.append("description", form.description);
+      fd.append("category", form.category);
+      if (form.priority) fd.append("priority", form.priority);
+      if (form.linkedAssetId) fd.append("linkedAssetId", form.linkedAssetId);
+
+      attachments.forEach((file) => {
+        fd.append("attachments", file);
+      });
+
       await apiFetch("/tickets", {
         method: "POST",
-        body: JSON.stringify({
-          ...form,
-          linkedAssetId: Number(form.linkedAssetId),
-        }),
+        body: fd,
+        headers: {},
       });
       router.push("/tickets");
     } catch (err: any) {
@@ -123,7 +133,7 @@ export default function NewTicket() {
                 onChange={handleChange}
                 className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-500 bg-black text-gray-100"
               >
-                {field.optional && <option value="">-- Select --</option>}
+                <option value="">-- Select --</option>
                 {field.options?.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
@@ -141,6 +151,22 @@ export default function NewTicket() {
             )}
           </div>
         ))}{" "}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500">Attachments</label>
+          <input
+            type="file"
+            multiple
+            onChange={(e) => setAttachments(Array.from(e.target.files ?? []))}
+            className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-500 bg-transparent"
+          />
+          {attachments.length > 0 && (
+            <div className="text-xs text-gray-400 space-y-1">
+              {attachments.map((file) => (
+                <p key={file.name}>{file.name}</p>
+              ))}
+            </div>
+          )}
+        </div>
         {error && <p className="text-xs text-red-400">{error}</p>}
         <button
           onClick={handleSubmit}

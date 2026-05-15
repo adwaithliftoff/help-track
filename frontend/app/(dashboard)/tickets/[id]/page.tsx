@@ -69,6 +69,8 @@ type Employee = {
   fullName: string;
 };
 
+const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
+
 export default function TicketPage() {
   const params = useParams();
   const router = useRouter();
@@ -81,6 +83,7 @@ export default function TicketPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [managing, setManaging] = useState(false);
   const [comments, setComments] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -158,18 +161,52 @@ export default function TicketPage() {
     setManageForm({ ...manageForm, [e.target.name]: e.target.value });
   }
 
+  function AttachmentPreview({ filename }: { filename: string }) {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/tickets/attachments/${encodeURIComponent(filename)}`;
+    const ext = filename.split(".").pop()?.toLowerCase();
+
+    return (
+      <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-2">
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs text-gray-300 hover:bg-white/10 hover:text-white"
+        >
+          {filename}
+        </a>
+        {IMAGE_EXTS.includes(ext ?? "") && (
+          <img
+            src={url}
+            alt={filename}
+            className="max-h-96 w-full rounded-md object-contain"
+          />
+        )}
+      </div>
+    );
+  }
+
   async function handleUpdate() {
+    if (!confirm("Save changes?")) return;
     setError(null);
     try {
+      const fd = new FormData();
+      fd.append("title", form.title);
+      fd.append("description", form.description);
+      fd.append("category", form.category);
+      fd.append("priority", form.priority);
+
+      selectedFiles.forEach((file) => {
+        fd.append("attachments", file);
+      });
       const updated = await apiFetch(`/tickets/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({
-          ...form,
-          attachments: attachmentList,
-        }),
+        body: fd,
+        headers: {},
       });
       setTicket(updated);
       setEditing(false);
+      setSelectedFiles([]);
     } catch (err: any) {
       setError(err);
     }
@@ -200,17 +237,16 @@ export default function TicketPage() {
     }
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSelectedFiles(Array.from(e.target.files ?? []));
+  }
+
   async function fetchComments() {
     const data = await apiFetch(`/tickets/${id}/comments`);
     setComments(data);
   }
 
-  const rawAttach = form.attachments ?? ticket?.attachments?.join(", ") ?? "";
-
-  const attachmentList = rawAttach
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const attachmentList = ticket?.attachments ?? [];
 
   if (!ticket) return null;
   const isCreator = ticket.creatorId === me?.id;
@@ -370,12 +406,35 @@ export default function TicketPage() {
                       Attachments
                     </label>
                     <input
-                      name="attachments"
-                      value={form.attachments}
-                      onChange={handleChange}
-                      placeholder="Comma-separated URLs or file names"
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
                       className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
                     />
+
+                    {selectedFiles.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <div
+                            key={`${file.name}-${file.lastModified}`}
+                            className="flex items-center justify-between rounded-md border border-white/10 bg-black/20 px-3 py-2 text-xs text-gray-300"
+                          >
+                            <span className="truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedFiles((prev) =>
+                                  prev.filter((_, i) => i !== index),
+                                )
+                              }
+                              className="ml-3 text-red-400 hover:text-red-300"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -403,14 +462,12 @@ export default function TicketPage() {
                     <h2 className="text-xs uppercase tracking-wide text-gray-500">
                       Attachments
                     </h2>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-3">
                       {attachmentList.map((attachment) => (
-                        <span
+                        <AttachmentPreview
                           key={attachment}
-                          className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-gray-300"
-                        >
-                          {attachment}
-                        </span>
+                          filename={attachment}
+                        />
                       ))}
                     </div>
                   </div>

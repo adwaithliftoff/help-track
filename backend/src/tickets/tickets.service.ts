@@ -26,9 +26,10 @@ export class TicketsService {
     linkedAsset: { select: { assetName: true } },
   } as const;
 
-  create(createTicketDto: CreateTicketDto, userId: number) {
+  create(createTicketDto: CreateTicketDto, files, userId: number) {
+    const attachments = files.map((file) => file.filename);
     return this.prisma.ticket.create({
-      data: { ...createTicketDto, creatorId: userId },
+      data: { ...createTicketDto, attachments, creatorId: userId },
     });
   }
 
@@ -86,13 +87,23 @@ export class TicketsService {
     return ticket;
   }
 
-  async update(id: number, updateTicketDto: UpdateTicketDto, userId: number) {
+  async update(
+    id: number,
+    updateTicketDto: UpdateTicketDto,
+    files,
+    userId: number,
+  ) {
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
+    const newAttachments = files.map((file) => file.filename);
+    const attachments =
+      newAttachments.length > 0
+        ? [...ticket.attachments, ...newAttachments]
+        : ticket.attachments;
     if (ticket.creatorId === userId) {
       return this.prisma.ticket.update({
         where: { id },
-        data: { ...updateTicketDto },
+        data: { ...updateTicketDto, attachments },
         include: this.ticketInclude,
       });
     }
