@@ -1,34 +1,14 @@
 "use client";
 
-import { apiFetch } from "@/lib/api";
-import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/providers/AuthProvider";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 export default function Sidebar() {
-  const user = useAuth();
-  const [showLogout, setShowLogout] = useState(false);
-  const router = useRouter();
+  const { user } = useUser();
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
-
-  async function handleLogout() {
-    if (!confirm("Logout?")) return;
-    await apiFetch("/auth/logout", {
-      method: "POST",
-    });
-    router.push("/login");
-  }
-
-  const initials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "?";
 
   return (
     <aside className="w-52 border-r border-gray-800 flex flex-col flex-shrink-0 h-full">
@@ -36,7 +16,7 @@ export default function Sidebar() {
         <p className="px-3 pt-3 pb-1 text-xs text-gray-500 uppercase tracking-wide">
           Navigate
         </p>
-        {user?.role !== "EMPLOYEE" && (
+        {user?.publicMetadata.role_name !== "Member" && (
           <>
             <Link
               href="/"
@@ -82,39 +62,16 @@ export default function Sidebar() {
         </Link>
       </nav>
       <div className="px-3 py-4 border-t border-gray-800">
-        {showLogout && (
-          <>
-            <Link
-              href={`/employees/${user?.id}`}
-              className="mb-2 block w-full text-left px-3 py-2 text-sm hover:bg-gray-800 rounded-md"
-            >
-              Profile
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="mb-2 w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-800 rounded-md"
-            >
-              Logout
-            </button>
-          </>
-        )}
-
-        <button
-          onClick={() => setShowLogout(!showLogout)}
-          className="flex items-center gap-3 w-full hover:bg-gray-800 rounded-md p-1 transition-colors"
-        >
-          <div className="w-8 h-8 rounded-full bg-blue-900 text-blue-300 flex items-center justify-center text-xs font-medium flex-shrink-0">
-            {initials}
-          </div>
-          <div className="flex flex-col min-w-0 text-left">
-            <span className="text-sm text-gray-100 truncate">
-              {user?.fullName}
-            </span>
-            <span className="text-xs text-gray-500 truncate">
-              {user?.officialEmail}
-            </span>
-          </div>
-        </button>
+        <UserButton
+          showName
+          appearance={{
+            elements: {
+              userButtonBox: {
+                flexDirection: "row-reverse",
+              },
+            },
+          }}
+        />
       </div>
     </aside>
   );
