@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AssetsModule } from './assets/assets.module';
 import { AllocationsModule } from './allocations/allocations.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TicketsModule } from './tickets/tickets.module';
     AssetsModule,
     AllocationsModule,
     TicketsModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -15,13 +15,14 @@ datasource db {
 
 model Employee {
   id             Int            @id @default(autoincrement())
-  employeeNumber Int            @unique
+  clerkUserId    String?        @unique
+  employeeNumber Int?           @unique
   fullName       String
   officialEmail  String         @unique
-  password       String
-  departmentId   Int
-  designation    String
-  joiningDate    DateTime
+  password       String?
+  departmentId   Int?
+  designation    String?
+  joiningDate    DateTime?
   status         EmployeeStatus @default(ACTIVE)
   role           RoleName       @default(EMPLOYEE)
   createdAt      DateTime       @default(now())

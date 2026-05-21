@@ -21,6 +21,21 @@ export class EmployeesService {
     });
   }
 
+  async upsertFromClerk(data) {
+    return this.prisma.employee.upsert({
+      where: { clerkUserId: data.clerkUserId },
+      create: {
+        clerkUserId: data.clerkUserId,
+        fullName: data.fullName,
+        officialEmail: data.officialEmail,
+      },
+      update: {
+        fullName: data.fullName,
+        officialEmail: data.officialEmail,
+      },
+    });
+  }
+
   async findAll(employeeNumber, fullName) {
     return this.prisma.employee.findMany({
       where: {
