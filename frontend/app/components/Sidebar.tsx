@@ -2,10 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 
 export default function Sidebar() {
-  const { user } = useUser();
+  const { orgRole } = useAuth();
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
@@ -16,7 +16,7 @@ export default function Sidebar() {
         <p className="px-3 pt-3 pb-1 text-xs text-gray-500 uppercase tracking-wide">
           Navigate
         </p>
-        {user?.publicMetadata.role_name !== "Member" && (
+        {orgRole === "org:admin" && (
           <>
             <Link
               href="/"

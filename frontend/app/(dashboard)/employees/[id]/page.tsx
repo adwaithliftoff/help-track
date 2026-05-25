@@ -1,7 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@clerk/nextjs";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -106,7 +106,7 @@ export default function EmployeePage() {
     router.push("/");
   }
 
-  const isAdmin = me?.role === "ADMIN" || me?.role === "SUPER_ADMIN";
+  const isAdmin = me?.orgRole === "org:admin";
 
   const activeAllocations = allocations.filter((a) => !a.returnDate);
 

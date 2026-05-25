@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -37,6 +38,11 @@ export class EmployeesController {
       id && Number(id) ? +id : undefined,
       name,
     );
+  }
+
+  @Get('me')
+  findMe(@Req() req) {
+    return this.employeesService.findMe(req.user.sub);
   }
 
   @UseGuards(SelfGuard)

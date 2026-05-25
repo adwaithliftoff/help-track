@@ -4,7 +4,7 @@ import { apiFetch } from "@/lib/api";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import TicketComments from "./TicketComments";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@clerk/nextjs";
 
 type Ticket = {
   id: number;
@@ -84,6 +84,7 @@ export default function TicketPage() {
   const [managing, setManaging] = useState(false);
   const [comments, setComments] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [currentUser, setCurrentUser] = useState<Employee>();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -105,12 +106,14 @@ export default function TicketPage() {
       setLoading(true);
       setError(null);
       try {
-        const [ticketData, commentsData] = await Promise.all([
+        const [ticketData, commentsData, currentUser] = await Promise.all([
           apiFetch(`/tickets/${id}`),
           apiFetch(`/tickets/${id}/comments`),
+          apiFetch("/employees/me"),
         ]);
         setTicket(ticketData);
         setComments(commentsData);
+        setCurrentUser(currentUser);
         setForm({
           title: ticketData.title ?? "",
           description: ticketData.description ?? "",
@@ -132,7 +135,7 @@ export default function TicketPage() {
             : "",
           resolutionNote: ticketData.resolutionNote ?? "",
         });
-        if (me?.role === "ADMIN" || me?.role === "SUPER_ADMIN") {
+        if (me?.orgRole === "org:admin") {
           const employeeList = await apiFetch("/employees");
           setEmployees(employeeList);
         }
@@ -249,8 +252,8 @@ export default function TicketPage() {
   const attachmentList = ticket?.attachments ?? [];
 
   if (!ticket) return null;
-  const isCreator = ticket.creatorId === me?.id;
-  const canManage = me?.role === "ADMIN" || me?.role === "SUPER_ADMIN" || false;
+  const isCreator = ticket.creatorId === currentUser?.id;
+  const canManage = me?.orgRole === "org:admin" || false;
 
   async function handleDelete() {
     if (!confirm("Delete this ticket?")) return;

@@ -1,7 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@clerk/nextjs";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -58,6 +58,7 @@ export default function AssetPage() {
   const [editing, setEditing] = useState(false);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [currentUser, setCurrentUser] = useState<Employee>();
 
   const isPhysical = ["HARDWARE", "ACCESSORY"].includes(
     form.assetCategory ?? "",
@@ -154,17 +155,19 @@ export default function AssetPage() {
     assetTag: asset.physicalAsset?.assetTag ?? "",
   });
 
-  const isAdmin = me?.role === "ADMIN" || me?.role === "SUPER_ADMIN";
+  const isAdmin = me?.orgRole === "org:admin";
 
   useEffect(() => {
     async function fetchData() {
-      const [asset, allocaionHistory] = await Promise.all([
-        await apiFetch(`/assets/${id}`),
-        await apiFetch(`/allocations/asset/${id}`),
+      const [asset, allocaionHistory, currentUser] = await Promise.all([
+        apiFetch(`/assets/${id}`),
+        apiFetch(`/allocations/asset/${id}`),
+        apiFetch("/employees/me"),
       ]);
       setAsset(mapAssets(asset));
       setForm(mapAssets(asset));
       setAllocations(allocaionHistory);
+      setCurrentUser(currentUser);
 
       if (isAdmin) {
         const employeeList = await apiFetch("/employees");
@@ -173,7 +176,7 @@ export default function AssetPage() {
     }
 
     fetchData();
-  }, [id]);
+  }, [id, isAdmin]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -206,36 +209,33 @@ export default function AssetPage() {
   }
 
   async function handleReturn() {
-    if (!activeAllocation || !me) return;
+    if (!activeAllocation || !me || !currentUser) return;
     await apiFetch(`/allocations/${activeAllocation.id}/return`, {
       method: "PATCH",
-      body: JSON.stringify({ ...returnForm, receivingAdminId: me.id }),
+      body: JSON.stringify({ ...returnForm, receivingAdminId: currentUser.id }),
     });
     const [updatedAsset, updatedAllocations] = await Promise.all([
       apiFetch(`/assets/${id}`),
       apiFetch(`/allocations/asset/${id}`),
     ]);
-
     setAsset(updatedAsset);
     setAllocations(updatedAllocations);
   }
 
   async function handleAllocate() {
-    if (!me) return;
+    if (!me || !currentUser) return;
     await apiFetch(`/allocations`, {
       method: "POST",
       body: JSON.stringify({
         ...allocateForm,
         assetId: Number(id),
-        allocatedById: me.id,
+        allocatedById: currentUser.id,
       }),
     });
-
     const [updatedAsset, updatedAllocations] = await Promise.all([
       apiFetch(`/assets/${id}`),
       apiFetch(`/allocations/asset/${id}`),
     ]);
-
     setAsset(updatedAsset);
     setAllocations(updatedAllocations);
   }

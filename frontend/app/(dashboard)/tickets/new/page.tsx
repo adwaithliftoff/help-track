@@ -30,7 +30,8 @@ export default function NewTicket() {
 
   useEffect(() => {
     async function fetchData() {
-      const data = await apiFetch(`/allocations/employee/${me?.id}`);
+      const currentUser = await apiFetch("/employees/me");
+      const data = await apiFetch(`/allocations/employee/${currentUser?.id}`);
       setAssets(data);
     }
     fetchData();
