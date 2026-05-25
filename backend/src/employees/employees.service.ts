@@ -74,6 +74,24 @@ export class EmployeesService {
     });
   }
 
+  async updateRole({ clerkUserId, clerkRole }) {
+    const roleMap = {
+      'org:admin': 'ADMIN',
+      'org:member': 'EMPLOYEE',
+    };
+
+    const internalRole = roleMap[clerkRole] ?? 'EMPLOYEE';
+
+    return this.prisma.employee.update({
+      where: {
+        clerkUserId,
+      },
+      data: {
+        role: internalRole,
+      },
+    });
+  }
+
   async remove(id: number) {
     return this.prisma.employee.delete({
       where: { id },

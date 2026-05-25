@@ -17,7 +17,7 @@ import {
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from 'src/auth/guards/clerk-auth.guard';
 import { ManageTicketDto } from './dto/manage-ticket.dto';
 import { ClaimsGuard } from 'src/auth/guards/claims.guard';
 import { RequirePermissions } from 'src/auth/claims.decorator';
@@ -28,7 +28,7 @@ import { resolve } from 'node:path';
 import { createReadStream, existsSync } from 'node:fs';
 import { lookup } from 'mime-types';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}

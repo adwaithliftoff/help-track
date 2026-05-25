@@ -11,12 +11,12 @@ import {
 import { AllocationsService } from './allocations.service';
 import { CreateAllocationDto } from './dto/create-allocation.dto';
 import { ReturnAllocationDto } from './dto/return-allocation.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from 'src/auth/guards/clerk-auth.guard';
 import { SelfGuard } from 'src/auth/guards/self.guard';
 import { ClaimsGuard } from 'src/auth/guards/claims.guard';
 import { RequirePermissions } from 'src/auth/claims.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('allocations')
 export class AllocationsController {
   constructor(private readonly allocationsService: AllocationsService) {}

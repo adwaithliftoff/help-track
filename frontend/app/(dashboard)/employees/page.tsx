@@ -97,7 +97,7 @@ export default function Employees() {
                   </p>
                 </td>
                 <td className="px-4 py-3 text-gray-400">
-                  {employee.department.name}
+                  {employee.department?.name}
                 </td>
                 <td className="px-4 py-3 text-gray-400">
                   {employee.designation}

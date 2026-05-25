@@ -22,9 +22,15 @@ export class SelfGuard implements CanActivate {
 
     const requiredPermissions = this.reflector.getAllAndOverride(
       'permissions',
-      [context.getHandler(), context.getClass],
+      [context.getHandler(), context.getClass()],
     );
     if (!requiredPermissions) return true;
+
+    if (user.o.rol === 'admin') {
+      user.role = 'ADMIN';
+    } else {
+      user.role = 'EMPLOYEE';
+    }
 
     const userPermissions = await this.prisma.rolePermission.findMany({
       where: { role: user.role },

@@ -12,12 +12,12 @@ import {
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from 'src/auth/guards/clerk-auth.guard';
 import { SelfGuard } from 'src/auth/guards/self.guard';
 import { ClaimsGuard } from 'src/auth/guards/claims.guard';
 import { RequirePermissions } from 'src/auth/claims.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
