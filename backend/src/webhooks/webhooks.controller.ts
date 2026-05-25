@@ -16,6 +16,7 @@ export class WebhooksController {
           officialEmail: data.email_addresses?.[0]?.email_address,
         });
       case 'organizationMembership.updated':
+      case 'organizationMembership.created':
         return this.employeesService.updateRole({
           clerkUserId: data.public_user_data.user_id,
           clerkRole: data.role,
