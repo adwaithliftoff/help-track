@@ -20,9 +20,12 @@ export default function TicketComments({
   const [text, setText] = useState("");
 
   async function handleSubmit() {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
     await apiFetch(`/tickets/${ticketId}/comments`, {
       method: "POST",
-      body: JSON.stringify({ comment: text }),
+      body: JSON.stringify({ comment: trimmed }),
     });
     setText("");
     onCommentAdded();
@@ -56,7 +59,8 @@ export default function TicketComments({
         />
         <button
           onClick={handleSubmit}
-          className="rounded-lg bg-black border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/5"
+          disabled={!text.trim()}
+          className="rounded-lg bg-black border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Post
         </button>

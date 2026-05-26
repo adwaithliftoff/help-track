@@ -126,21 +126,25 @@ export class TicketsService {
   async addComment(
     ticketId: number,
     createCommentDto: CreateCommentDto,
-    updaterId: number,
+    updaterId: string,
     role: string,
   ) {
+    const employee = await this.prisma.employee.findUnique({
+      where: { clerkUserId: updaterId },
+    });
+    if (!employee) throw new NotFoundException('Employee not found');
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },
     });
     if (!ticket) throw new NotFoundException('Ticket not found');
-    if (role === 'EMPLOYEE' && ticket.creatorId !== updaterId) {
+    if (role === 'EMPLOYEE' && ticket.creatorId !== employee?.id) {
       throw new ForbiddenException('Access denied');
     }
     return this.prisma.ticketComment.create({
       data: {
         ...createCommentDto,
         ticketId,
-        updaterId,
+        updaterId: employee.id,
       },
     });
   }
