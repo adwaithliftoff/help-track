@@ -68,12 +68,12 @@ export class TicketsController {
     },
     @Req() req,
   ) {
-    return this.ticketsService.findAll(query, req.user.sub, req.user.role);
+    return this.ticketsService.findAll(query, req.user.sub);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req) {
-    return this.ticketsService.findOne(+id, req.user.sub, req.user.role);
+    return this.ticketsService.findOne(+id, req.user.sub);
   }
 
   @Patch(':id')
@@ -122,17 +122,12 @@ export class TicketsController {
     @Param('id') id: string,
     @Req() req,
   ) {
-    return this.ticketsService.addComment(
-      +id,
-      createCommentDto,
-      req.user.sub,
-      req.user.role,
-    );
+    return this.ticketsService.addComment(+id, createCommentDto, req.user.sub);
   }
 
   @Get(':id/comments')
   getComments(@Param('id') id: string, @Req() req) {
-    return this.ticketsService.getComments(+id, req.user.sub, req.user.role);
+    return this.ticketsService.getComments(+id, req.user.sub);
   }
 
   @Get('attachments/:filename')
