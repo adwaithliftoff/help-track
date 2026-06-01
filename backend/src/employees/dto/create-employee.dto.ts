@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -13,16 +14,19 @@ export class CreateEmployeeDto {
   employeeNumber: number;
 
   @IsString()
+  @IsNotEmpty()
   fullName: string;
 
   @IsEmail()
+  @IsNotEmpty()
   officialEmail: string;
 
   @IsString()
   password: string;
 
   @IsInt()
-  departmentId: number;
+  @IsOptional()
+  departmentId?: number;
 
   @IsString()
   designation: string;

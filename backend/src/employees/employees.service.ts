@@ -1,24 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
 export class EmployeesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const hashedPassword = await bcrypt.hash(createEmployeeDto.password, 10);
-
-    return this.prisma.employee.create({
-      data: {
-        ...createEmployeeDto,
-        password: hashedPassword,
-        joiningDate: new Date(createEmployeeDto.joiningDate),
-      },
-      omit: { password: true },
-    });
+    try {
+      const hashedPassword = await bcrypt.hash(createEmployeeDto.password, 10);
+      return await this.prisma.employee.create({
+        data: {
+          ...createEmployeeDto,
+          password: hashedPassword,
+          joiningDate: new Date(createEmployeeDto.joiningDate),
+        },
+        omit: { password: true },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'An employee with this email or employee number already exists',
+        );
+      }
+      throw error;
+    }
   }
 
   async upsertFromClerk(data) {
