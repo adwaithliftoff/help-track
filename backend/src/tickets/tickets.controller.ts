@@ -71,6 +71,27 @@ export class TicketsController {
     return this.ticketsService.findAll(query, req.user.sub);
   }
 
+  @Get('attachments/:filename')
+  serveAttachment(@Param('filename') filename: string) {
+    const uploadsDir = resolve(process.cwd(), 'uploads', 'tickets');
+    const filePath = resolve(uploadsDir, filename);
+
+    if (!filePath.startsWith(uploadsDir))
+      throw new ForbiddenException('Access denied');
+
+    if (!existsSync(filePath)) throw new ForbiddenException('File not found');
+
+    return new StreamableFile(createReadStream(filePath), {
+      type: lookup(filename) || 'application/octet-stream',
+      disposition: `inline; filename="${filename}"`,
+    });
+  }
+
+  @Get(':id/comments')
+  getComments(@Param('id') id: string, @Req() req) {
+    return this.ticketsService.getComments(+id, req.user.sub);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req) {
     return this.ticketsService.findOne(+id, req.user.sub);
@@ -123,26 +144,5 @@ export class TicketsController {
     @Req() req,
   ) {
     return this.ticketsService.addComment(+id, createCommentDto, req.user.sub);
-  }
-
-  @Get(':id/comments')
-  getComments(@Param('id') id: string, @Req() req) {
-    return this.ticketsService.getComments(+id, req.user.sub);
-  }
-
-  @Get('attachments/:filename')
-  serveAttachment(@Param('filename') filename: string) {
-    const uploadsDir = resolve(process.cwd(), 'uploads', 'tickets');
-    const filePath = resolve(uploadsDir, filename);
-
-    if (!filePath.startsWith(uploadsDir))
-      throw new ForbiddenException('Access denied');
-
-    if (!existsSync(filePath)) throw new ForbiddenException('File not found');
-
-    return new StreamableFile(createReadStream(filePath), {
-      type: lookup(filename) || 'application/octet-stream',
-      disposition: `inline; filename="${filename}"`,
-    });
   }
 }

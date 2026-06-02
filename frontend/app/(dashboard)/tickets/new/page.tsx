@@ -82,7 +82,7 @@ export default function NewTicket() {
         { label: "Software Issue", value: "SOFTWARE_ISSUE" },
         { label: "Access Issue", value: "ACCESS_ISSUE" },
         { label: "Asset Request", value: "ASSET_REQUEST" },
-        { label: "Subscription / License", value: "SUBSCRIPTION_LICENSE" },
+        { label: "Subscription / License", value: "SUBSCRIPTION_ISSUE" },
         { label: "General Support", value: "GENERAL_SUPPORT" },
       ],
     },
