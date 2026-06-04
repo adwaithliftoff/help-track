@@ -165,7 +165,7 @@ export default function TicketPage() {
   }
 
   function AttachmentPreview({ filename }: { filename: string }) {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/tickets/attachments/${encodeURIComponent(filename)}`;
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/tickets/${id}/attachments/${encodeURIComponent(filename)}`;
     const ext = filename.split(".").pop()?.toLowerCase();
 
     return (

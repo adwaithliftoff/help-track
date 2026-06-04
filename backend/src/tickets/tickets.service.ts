@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  StreamableFile,
 } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
@@ -13,6 +14,9 @@ import {
   TicketStatus,
 } from 'generated/prisma/enums';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { createReadStream, existsSync } from 'fs';
+import { lookup } from 'mime-types';
+import { resolve } from 'path';
 
 @Injectable()
 export class TicketsService {
@@ -176,6 +180,23 @@ export class TicketsService {
     return this.prisma.ticketComment.findMany({
       where: { ticketId: id },
       include: { updater: { select: { fullName: true } } },
+    });
+  }
+
+  async getAttachment(ticketId: number, userId: number, filename: string) {
+    const ticket = await this.findOne(ticketId, userId);
+    if (!ticket.attachments.includes(filename)) {
+      throw new NotFoundException('Attachment not found');
+    }
+    const uploadsDir = resolve(process.cwd(), 'uploads', 'tickets');
+    const filePath = resolve(uploadsDir, filename);
+    if (!filePath.startsWith(uploadsDir))
+      throw new ForbiddenException('Access denied');
+    if (!existsSync(filePath)) throw new NotFoundException('File not found');
+
+    return new StreamableFile(createReadStream(filePath), {
+      type: lookup(filename) || 'application/octet-stream',
+      disposition: `inline; filename="${filename}"`,
     });
   }
 }
