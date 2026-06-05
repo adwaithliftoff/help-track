@@ -9,11 +9,19 @@ import {
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: {
+        policy: 'cross-origin',
+      },
+    }),
+  );
   app.enableCors({
-    origin: 'http://localhost:3001',
+    origin: process.env.ALLOWED_ORIGINS?.split(','),
     credentials: true,
   });
   app.use(cookieParser());
