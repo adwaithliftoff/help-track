@@ -21,9 +21,6 @@ export class CreateEmployeeDto {
   @IsNotEmpty()
   officialEmail: string;
 
-  @IsString()
-  password: string;
-
   @IsInt()
   @IsOptional()
   departmentId?: number;

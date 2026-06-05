@@ -19,7 +19,6 @@ model Employee {
   employeeNumber Int?           @unique
   fullName       String
   officialEmail  String         @unique
-  password       String?
   departmentId   Int?
   designation    String?
   joiningDate    DateTime?
@@ -27,7 +26,6 @@ model Employee {
   role           RoleName       @default(EMPLOYEE)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  tokenVersion   Int            @default(0)
 
   department      Department?         @relation(fields: [departmentId], references: [id])
   allocations     AllocationHistory[] @relation("AssignedEmployee")

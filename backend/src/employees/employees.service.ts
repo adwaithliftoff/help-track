@@ -2,7 +2,6 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { PrismaService } from 'src/prisma.service';
-import * as bcrypt from 'bcrypt';
 import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
@@ -11,14 +10,11 @@ export class EmployeesService {
 
   async create(createEmployeeDto: CreateEmployeeDto) {
     try {
-      const hashedPassword = await bcrypt.hash(createEmployeeDto.password, 10);
       return await this.prisma.employee.create({
         data: {
           ...createEmployeeDto,
-          password: hashedPassword,
           joiningDate: new Date(createEmployeeDto.joiningDate),
         },
-        omit: { password: true },
       });
     } catch (error) {
       if (
@@ -54,7 +50,6 @@ export class EmployeesService {
         employeeNumber,
         fullName: { contains: fullName, mode: 'insensitive' },
       },
-      omit: { password: true },
       include: { department: true },
     });
   }
@@ -62,7 +57,6 @@ export class EmployeesService {
   async findOne(id: number) {
     return this.prisma.employee.findUnique({
       where: { id },
-      omit: { password: true },
       include: { department: true },
     });
   }
@@ -84,11 +78,9 @@ export class EmployeesService {
     if (updateEmployeeDto.joiningDate) {
       data.joiningDate = new Date(updateEmployeeDto.joiningDate);
     }
-    data.tokenVersion = { increment: 1 };
     return this.prisma.employee.update({
       data,
       where: { id },
-      omit: { password: true },
     });
   }
 
@@ -113,7 +105,6 @@ export class EmployeesService {
   async remove(id: number) {
     return this.prisma.employee.delete({
       where: { id },
-      omit: { password: true },
     });
   }
 }

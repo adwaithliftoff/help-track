@@ -2,5 +2,5 @@ import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { CreateEmployeeDto } from './create-employee.dto';
 
 export class UpdateEmployeeDto extends PartialType(
-  OmitType(CreateEmployeeDto, ['officialEmail', 'password'] as const),
+  OmitType(CreateEmployeeDto, ['officialEmail'] as const),
 ) {}
