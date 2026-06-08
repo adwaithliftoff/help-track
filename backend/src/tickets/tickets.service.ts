@@ -17,6 +17,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { createReadStream, existsSync } from 'fs';
 import { lookup } from 'mime-types';
 import { resolve } from 'path';
+import { Employee } from 'generated/prisma/client';
 
 @Injectable()
 export class TicketsService {
@@ -29,14 +30,10 @@ export class TicketsService {
     linkedAsset: { select: { assetName: true } },
   } as const;
 
-  async create(createTicketDto: CreateTicketDto, files, userId: string) {
+  async create(createTicketDto: CreateTicketDto, files, userId: number) {
     const attachments = files.map((file) => file.filename);
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: userId },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
     return this.prisma.ticket.create({
-      data: { ...createTicketDto, attachments, creatorId: employee.id },
+      data: { ...createTicketDto, attachments, creatorId: userId },
     });
   }
 
@@ -51,7 +48,7 @@ export class TicketsService {
       dateFrom?: string;
       dateTo?: string;
     },
-    id: string,
+    user: Employee,
   ) {
     const where = {
       ...(query.status && { status: query.status as TicketStatus }),
@@ -69,33 +66,25 @@ export class TicketsService {
           }
         : {}),
     };
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: id },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
-    if (employee.role !== 'ADMIN') {
-      return this.prisma.ticket.findMany({
-        where: {
-          creatorId: employee.id,
-          ...where,
-        },
-      });
+    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      return this.prisma.ticket.findMany({ where: { ...where } });
     }
-    return this.prisma.ticket.findMany({ where: { ...where } });
+    return this.prisma.ticket.findMany({
+      where: {
+        creatorId: user.id,
+        ...where,
+      },
+    });
   }
 
-  async findOne(id: number, userId) {
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: userId },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
+  async findOne(id: number, user: Employee) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: this.ticketInclude,
     });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
-    if (employee.role === 'EMPLOYEE') {
-      if (ticket.creatorId !== employee.id)
+    if (user.role === 'EMPLOYEE') {
+      if (ticket.creatorId !== user.id)
         throw new ForbiddenException('Access denied');
     }
     return ticket;
@@ -105,20 +94,16 @@ export class TicketsService {
     id: number,
     updateTicketDto: UpdateTicketDto,
     files,
-    userId: string,
+    userId: number,
   ) {
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: userId },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
     const newAttachments = files.map((file) => file.filename);
     const attachments =
       newAttachments.length > 0
         ? [...ticket.attachments, ...newAttachments]
         : ticket.attachments;
-    if (ticket.creatorId === employee.id) {
+    if (ticket.creatorId === userId) {
       return this.prisma.ticket.update({
         where: { id },
         data: { ...updateTicketDto, attachments },
@@ -143,38 +128,30 @@ export class TicketsService {
   async addComment(
     ticketId: number,
     createCommentDto: CreateCommentDto,
-    updaterId: string,
+    user: Employee,
   ) {
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: updaterId },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },
     });
     if (!ticket) throw new NotFoundException('Ticket not found');
-    if (employee.role === 'EMPLOYEE' && ticket.creatorId !== employee?.id) {
+    if (user.role === 'EMPLOYEE' && ticket.creatorId !== user.id) {
       throw new ForbiddenException('Access denied');
     }
     return this.prisma.ticketComment.create({
       data: {
         ...createCommentDto,
         ticketId,
-        updaterId: employee.id,
+        updaterId: user.id,
       },
     });
   }
 
-  async getComments(id: number, updaterId: string) {
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: updaterId },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
+  async getComments(id: number, user: Employee) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
     });
     if (!ticket) throw new NotFoundException('Ticket not found');
-    if (employee.role === 'EMPLOYEE' && ticket.creatorId !== employee.id) {
+    if (user.role === 'EMPLOYEE' && ticket.creatorId !== user.id) {
       throw new ForbiddenException('Access denied');
     }
     return this.prisma.ticketComment.findMany({
@@ -183,8 +160,8 @@ export class TicketsService {
     });
   }
 
-  async getAttachment(ticketId: number, userId: number, filename: string) {
-    const ticket = await this.findOne(ticketId, userId);
+  async getAttachment(ticketId: number, user: Employee, filename: string) {
+    const ticket = await this.findOne(ticketId, user);
     if (!ticket.attachments.includes(filename)) {
       throw new NotFoundException('Attachment not found');
     }

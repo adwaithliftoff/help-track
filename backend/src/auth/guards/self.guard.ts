@@ -19,25 +19,12 @@ export class SelfGuard implements CanActivate {
     const paramId = Number(request.params.id);
     const user = request.user;
 
-    const employee = await this.prisma.employee.findUnique({
-      where: { clerkUserId: user.sub },
-      select: { id: true },
-    });
-
-    if (!employee) throw new ForbiddenException('Access denied');
-    if (employee.id === paramId) return true;
-
+    if (user.id === paramId) return true;
     const requiredPermissions = this.reflector.getAllAndOverride(
       'permissions',
       [context.getHandler(), context.getClass()],
     );
     if (!requiredPermissions) return true;
-
-    if (user.o.rol === 'admin') {
-      user.role = 'ADMIN';
-    } else {
-      user.role = 'EMPLOYEE';
-    }
 
     const userPermissions = await this.prisma.rolePermission.findMany({
       where: { role: user.role },

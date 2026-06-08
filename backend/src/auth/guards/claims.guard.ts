@@ -15,11 +15,6 @@ export class ClaimsGuard implements CanActivate {
     );
     if (!requiredPermissions) return true;
     const user = context.switchToHttp().getRequest().user;
-    if (user.o.rol === 'admin') {
-      user.role = 'ADMIN';
-    } else {
-      user.role = 'EMPLOYEE';
-    }
     const userPermissions = await this.prisma.rolePermission.findMany({
       where: { role: user.role },
     });

@@ -42,7 +42,7 @@ export class EmployeesController {
 
   @Get('me')
   findMe(@Req() req) {
-    return this.employeesService.findMe(req.user.sub);
+    return this.employeesService.findOne(req.user.id);
   }
 
   @UseGuards(SelfGuard)

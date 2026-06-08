@@ -5,9 +5,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
+  constructor(private prismaService: PrismaService) {}
+
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const token = request.cookies.__session;
@@ -15,10 +18,12 @@ export class ClerkAuthGuard implements CanActivate {
       const payload = await verifyToken(token, {
         secretKey: process.env.CLERK_SECRET_KEY,
       });
-      request.user = payload;
+      const user = await this.prismaService.employee.findUnique({
+        where: { clerkUserId: payload.sub },
+      });
+      request.user = user;
       return true;
     } catch (error) {
-      console.error(error);
       throw new UnauthorizedException('Invalid session');
     }
   }

@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  Req,
   UseGuards,
   Query,
   UseInterceptors,
@@ -25,6 +24,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'node:path';
 import { FileValidationPipe } from 'src/common/pipes/file-validation.pipe';
 import { randomUUID } from 'node:crypto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { Employee } from 'generated/prisma/browser';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('tickets')
@@ -48,9 +49,9 @@ export class TicketsController {
   create(
     @Body() createTicketDto: CreateTicketDto,
     @UploadedFiles(new FileValidationPipe()) files: Express.Multer.File[],
-    @Req() req,
+    @CurrentUser() user: Employee,
   ) {
-    return this.ticketsService.create(createTicketDto, files, req.user.sub);
+    return this.ticketsService.create(createTicketDto, files, user.id);
   }
 
   @Get()
@@ -66,28 +67,28 @@ export class TicketsController {
       dateFrom?: string;
       dateTo?: string;
     },
-    @Req() req,
+    @CurrentUser() user: Employee,
   ) {
-    return this.ticketsService.findAll(query, req.user.sub);
+    return this.ticketsService.findAll(query, user);
   }
 
   @Get(':ticketId/attachments/:filename')
   async getAttachment(
     @Param('ticketId') ticketId: number,
     @Param('filename') filename: string,
-    @Req() req,
+    @CurrentUser() user: Employee,
   ) {
-    return this.ticketsService.getAttachment(ticketId, req.user.sub, filename);
+    return this.ticketsService.getAttachment(ticketId, user, filename);
   }
 
   @Get(':id/comments')
-  getComments(@Param('id') id: string, @Req() req) {
-    return this.ticketsService.getComments(+id, req.user.sub);
+  getComments(@Param('id') id: string, @CurrentUser() user: Employee) {
+    return this.ticketsService.getComments(+id, user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Req() req) {
-    return this.ticketsService.findOne(+id, req.user.sub);
+  findOne(@Param('id') id: string, @CurrentUser() user: Employee) {
+    return this.ticketsService.findOne(+id, user);
   }
 
   @Patch(':id')
@@ -109,14 +110,9 @@ export class TicketsController {
     @Param('id') id: string,
     @Body() updateTicketDto: UpdateTicketDto,
     @UploadedFiles(new FileValidationPipe()) files: Express.Multer.File[],
-    @Req() req,
+    @CurrentUser() user: Employee,
   ) {
-    return this.ticketsService.update(
-      +id,
-      updateTicketDto,
-      files,
-      req.user.sub,
-    );
+    return this.ticketsService.update(+id, updateTicketDto, files, user.id);
   }
 
   @UseGuards(ClaimsGuard)
@@ -137,8 +133,8 @@ export class TicketsController {
   postComment(
     @Body() createCommentDto: CreateCommentDto,
     @Param('id') id: string,
-    @Req() req,
+    @CurrentUser() user: Employee,
   ) {
-    return this.ticketsService.addComment(+id, createCommentDto, req.user.sub);
+    return this.ticketsService.addComment(+id, createCommentDto, user);
   }
 }

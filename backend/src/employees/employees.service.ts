@@ -67,12 +67,6 @@ export class EmployeesService {
     });
   }
 
-  async findMe(clerkId: string) {
-    return this.prisma.employee.findUnique({
-      where: { clerkUserId: clerkId },
-    });
-  }
-
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     const data: any = { ...updateEmployeeDto };
     if (updateEmployeeDto.joiningDate) {
