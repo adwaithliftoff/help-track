@@ -9,11 +9,12 @@ import { TicketsModule } from './tickets/tickets.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
-    EmployeesModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    EmployeesModule,
     AssetsModule,
     AllocationsModule,
     TicketsModule,
@@ -35,6 +36,7 @@ import { APP_GUARD } from '@nestjs/core';
         limit: 1000,
       },
     ]),
+    MongooseModule.forRoot(process.env.MONGODB_URI!),
   ],
   controllers: [AppController],
   providers: [
