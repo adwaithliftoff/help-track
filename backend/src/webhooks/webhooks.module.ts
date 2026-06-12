@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { WebhooksController } from './webhooks.controller';
-import { EmployeesService } from 'src/employees/employees.service';
-import { PrismaService } from 'src/prisma.service';
+import { EmployeesModule } from 'src/employees/employees.module';
 
 @Module({
+  imports: [EmployeesModule],
   controllers: [WebhooksController],
-  providers: [EmployeesService, PrismaService],
 })
 export class WebhooksModule {}

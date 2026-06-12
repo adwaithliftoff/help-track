@@ -1,9 +1,12 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { EmployeesService } from 'src/employees/employees.service';
 
 @Controller('webhooks')
 export class WebhooksController {
-  constructor(private employeesService: EmployeesService) {}
+  constructor(
+    @Inject('EMPLOYEE_SERVICE') private employeesService: EmployeesService,
+  ) {}
+
   @Post()
   handle(@Body() body) {
     const { type, data } = body;
