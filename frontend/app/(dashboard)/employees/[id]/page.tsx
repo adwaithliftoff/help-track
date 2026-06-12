@@ -6,12 +6,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Employee = {
-  id: number;
+  id: string | number;
   employeeNumber: number;
   fullName: string;
   officialEmail: string;
-  department: { name: string };
-  departmentId: number;
+  department?: { name: string };
+  departmentId?: string | { _id: string; name: string };
   designation: string;
   joiningDate: string;
   status: string;
@@ -51,7 +51,7 @@ export default function EmployeePage() {
       readOnly: true,
     },
     { name: "department", label: "Department", type: "text" },
-    { name: "departmentId", label: "Department ID", type: "number" },
+    { name: "departmentId", label: "Department ID", type: "text" },
     { name: "designation", label: "Designation", type: "text" },
     { name: "joiningDate", label: "Joining Date", type: "date" },
     {
@@ -69,7 +69,13 @@ export default function EmployeePage() {
         await apiFetch(`/allocations/employee/${id}`),
       ]);
       setEmployee(employee);
-      setForm(employee);
+      setForm({
+        ...employee,
+        departmentId:
+          typeof employee.departmentId === "object"
+            ? (employee.departmentId?._id ?? "")
+            : (employee.departmentId ?? ""),
+      });
       setAllocations(allocations);
     }
     fetchData();
@@ -88,7 +94,7 @@ export default function EmployeePage() {
         method: "PATCH",
         body: JSON.stringify({
           ...form,
-          departmentId: Number(form.departmentId),
+          departmentId: form.departmentId || undefined,
         }),
       });
       setEmployee(updated);

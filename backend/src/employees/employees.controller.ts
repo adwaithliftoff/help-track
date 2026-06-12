@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   Req,
+  Inject,
 } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -21,7 +22,10 @@ import { RequirePermissions } from 'src/auth/claims.decorator';
 @UseGuards(ClerkAuthGuard)
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) {}
+  constructor(
+    @Inject('EMPLOYEE_SERVICE')
+    private readonly employeesService: EmployeesService,
+  ) {}
 
   @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_CREATE')
@@ -49,7 +53,7 @@ export class EmployeesController {
   @RequirePermissions('EMPLOYEE_READ')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.employeesService.findOne(+id);
+    return this.employeesService.findOne(id);
   }
 
   @UseGuards(ClaimsGuard)
@@ -59,13 +63,13 @@ export class EmployeesController {
     @Param('id') id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
   ) {
-    return this.employeesService.update(+id, updateEmployeeDto);
+    return this.employeesService.update(id, updateEmployeeDto);
   }
 
   @UseGuards(ClaimsGuard)
   @RequirePermissions('EMPLOYEE_DELETE')
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.employeesService.remove(+id);
+    return this.employeesService.remove(id);
   }
 }

@@ -14,6 +14,9 @@ export class EmployeesService {
         data: {
           ...createEmployeeDto,
           joiningDate: new Date(createEmployeeDto.joiningDate),
+          departmentId: createEmployeeDto.departmentId
+            ? Number(createEmployeeDto.departmentId)
+            : undefined,
         },
       });
     } catch (error) {
@@ -47,34 +50,33 @@ export class EmployeesService {
   async findAll(employeeNumber, fullName) {
     return this.prisma.employee.findMany({
       where: {
-        employeeNumber,
-        fullName: { contains: fullName, mode: 'insensitive' },
+        ...(employeeNumber && { employeeNumber }),
+        ...(fullName && {
+          fullName: { contains: fullName, mode: 'insensitive' },
+        }),
       },
       include: { department: true },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return this.prisma.employee.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: { department: true },
     });
   }
 
-  async findByEmail(email: string) {
-    return this.prisma.employee.findUnique({
-      where: { officialEmail: email },
-    });
-  }
-
-  async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
+  async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
     const data: any = { ...updateEmployeeDto };
     if (updateEmployeeDto.joiningDate) {
       data.joiningDate = new Date(updateEmployeeDto.joiningDate);
     }
+    if (updateEmployeeDto.departmentId) {
+      data.departmentId = Number(updateEmployeeDto.departmentId);
+    }
     return this.prisma.employee.update({
       data,
-      where: { id },
+      where: { id: Number(id) },
     });
   }
 
@@ -96,9 +98,9 @@ export class EmployeesService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     return this.prisma.employee.delete({
-      where: { id },
+      where: { id: Number(id) },
     });
   }
 }
