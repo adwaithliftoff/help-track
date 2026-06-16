@@ -1,12 +1,18 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PrismaService } from 'src/prisma.service';
+import { PermissionsService } from 'src/permissions/permissions.service';
 
 @Injectable()
 export class ClaimsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private readonly prisma: PrismaService,
+    @Inject('PERMISSION_SERVICE')
+    private readonly permissionsService: PermissionsService,
   ) {}
   async canActivate(context: ExecutionContext) {
     const requiredPermissions = this.reflector.getAllAndOverride(
@@ -15,9 +21,9 @@ export class ClaimsGuard implements CanActivate {
     );
     if (!requiredPermissions) return true;
     const user = context.switchToHttp().getRequest().user;
-    const userPermissions = await this.prisma.rolePermission.findMany({
-      where: { role: user.role },
-    });
+    const userPermissions = await this.permissionsService.getPermissions(
+      user.role,
+    );
     const permissions = userPermissions.map((p) => p.permission);
     return requiredPermissions.every((permission) =>
       permissions.includes(permission),

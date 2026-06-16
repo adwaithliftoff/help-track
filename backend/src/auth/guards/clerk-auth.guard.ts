@@ -2,14 +2,18 @@ import { verifyToken } from '@clerk/backend';
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { EmployeesService } from 'src/employees/employees.service';
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    @Inject('EMPLOYEE_SERVICE')
+    private readonly employeesService: EmployeesService,
+  ) {}
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
@@ -18,9 +22,7 @@ export class ClerkAuthGuard implements CanActivate {
       const payload = await verifyToken(token, {
         secretKey: process.env.CLERK_SECRET_KEY,
       });
-      const user = await this.prismaService.employee.findUnique({
-        where: { clerkUserId: payload.sub },
-      });
+      const user = await this.employeesService.findByClerkUserId(payload.sub);
       request.user = user;
       return true;
     } catch (error) {

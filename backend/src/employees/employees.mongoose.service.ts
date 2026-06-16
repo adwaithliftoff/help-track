@@ -57,6 +57,10 @@ export class EmployeesMongooseService {
     return this.employeeModel.findById(id).populate('departmentId');
   }
 
+  async findByClerkUserId(clerkUserId: string) {
+    return this.employeeModel.findOne({ clerkUserId }).lean();
+  }
+
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
     const data: any = { ...updateEmployeeDto };
     if (updateEmployeeDto.joiningDate) {

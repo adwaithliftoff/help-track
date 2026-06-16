@@ -13,6 +13,7 @@ import {
 } from 'src/mongoose.schemas';
 import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
+import { PermissionsModule } from 'src/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { Model } from 'mongoose';
       { name: Employee.name, schema: EmployeeSchema },
       { name: Department.name, schema: DepartmentSchema },
     ]),
+    PermissionsModule,
   ],
   controllers: [EmployeesController],
   providers: [
