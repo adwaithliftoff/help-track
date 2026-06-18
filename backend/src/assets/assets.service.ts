@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { PrismaService } from 'src/prisma.service';
-import { AssetCategory, AssetStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class AssetsService {
@@ -92,16 +91,16 @@ export class AssetsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const asset = await this.prisma.asset.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: { digitalSubscription: true, physicalAsset: true },
     });
     if (!asset) throw new NotFoundException('Asset not found');
     return asset;
   }
 
-  update(id: number, updateAssetDto: UpdateAssetDto) {
+  update(id: string, updateAssetDto: UpdateAssetDto) {
     const {
       serialNumber,
       macAddress,
@@ -113,21 +112,22 @@ export class AssetsService {
       licenseKey,
       ...baseFields
     } = updateAssetDto;
+    const assetId = Number(id);
 
     return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.asset.findUnique({ where: { id } });
+      const existing = await tx.asset.findUnique({ where: { id: assetId } });
       if (!existing) throw new NotFoundException('Asset not found');
 
       const asset = await tx.asset.update({
-        where: { id },
+        where: { id: assetId },
         data: baseFields,
       });
 
       if (['HARDWARE', 'ACCESSORY'].includes(asset.assetCategory)) {
         await tx.physicalAsset.upsert({
-          where: { assetId: id },
+          where: { assetId: assetId },
           update: { serialNumber, macAddress, assetTag },
-          create: { assetId: id, serialNumber, macAddress, assetTag },
+          create: { assetId: assetId, serialNumber, macAddress, assetTag },
         });
       } else if (
         ['SOFTWARE', 'AI_SUBSCRIPTION', 'SAAS_TOOL'].includes(
@@ -135,7 +135,7 @@ export class AssetsService {
         )
       ) {
         await tx.digitalSubscription.upsert({
-          where: { assetId: id },
+          where: { assetId: assetId },
           update: {
             planLicenseType,
             totalSeats,
@@ -144,7 +144,7 @@ export class AssetsService {
             licenseKey,
           },
           create: {
-            assetId: id,
+            assetId: assetId,
             planLicenseType,
             totalSeats,
             renewalDate: renewalDate ? new Date(renewalDate) : null,
@@ -154,7 +154,7 @@ export class AssetsService {
         });
       }
       return tx.asset.findUnique({
-        where: { id },
+        where: { id: assetId },
         include: {
           physicalAsset: true,
           digitalSubscription: true,
@@ -163,7 +163,7 @@ export class AssetsService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.asset.delete({ where: { id } });
+  remove(id: string) {
+    return this.prisma.asset.delete({ where: { id: Number(id) } });
   }
 }

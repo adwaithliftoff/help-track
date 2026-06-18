@@ -69,7 +69,7 @@ export default function AssetPage() {
   );
 
   const [allocateForm, setAllocateForm] = useState({
-    assignedEmployeeId: 0,
+    assignedEmployeeId: "",
     allocationDate: "",
     remarks: "",
   });
@@ -159,14 +159,14 @@ export default function AssetPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [asset, allocaionHistory, currentUser] = await Promise.all([
+      const [asset, allocationHistory, currentUser] = await Promise.all([
         apiFetch(`/assets/${id}`),
         apiFetch(`/allocations/asset/${id}`),
         apiFetch("/employees/me"),
       ]);
       setAsset(mapAssets(asset));
       setForm(mapAssets(asset));
-      setAllocations(allocaionHistory);
+      setAllocations(allocationHistory);
       setCurrentUser(currentUser);
 
       if (isAdmin) {
@@ -187,6 +187,11 @@ export default function AssetPage() {
   async function handleUpdate() {
     if (!confirm("Save changes?")) return;
     try {
+      const payload = Object.fromEntries(
+        Object.entries(form).filter(
+          ([_, v]) => v !== "" && v !== null && v !== undefined,
+        ),
+      );
       const updated = await apiFetch(`/assets/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -212,7 +217,10 @@ export default function AssetPage() {
     if (!activeAllocation || !me || !currentUser) return;
     await apiFetch(`/allocations/${activeAllocation.id}/return`, {
       method: "PATCH",
-      body: JSON.stringify({ ...returnForm, receivingAdminId: currentUser.id }),
+      body: JSON.stringify({
+        ...returnForm,
+        receivingAdminId: String(currentUser.id),
+      }),
     });
     const [updatedAsset, updatedAllocations] = await Promise.all([
       apiFetch(`/assets/${id}`),
@@ -228,8 +236,8 @@ export default function AssetPage() {
       method: "POST",
       body: JSON.stringify({
         ...allocateForm,
-        assetId: Number(id),
-        allocatedById: currentUser.id,
+        assetId: id,
+        allocatedById: String(currentUser.id),
       }),
     });
     const [updatedAsset, updatedAllocations] = await Promise.all([
@@ -411,7 +419,7 @@ export default function AssetPage() {
               onChange={(e) =>
                 setAllocateForm({
                   ...allocateForm,
-                  assignedEmployeeId: Number(e.target.value),
+                  assignedEmployeeId: e.target.value,
                 })
               }
               className="w-full rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-sm"

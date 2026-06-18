@@ -12,8 +12,10 @@ import { ReturnAllocationDto } from './dto/return-allocation.dto';
 export class AllocationsService {
   constructor(private prisma: PrismaService) {}
 
-  private async validateAdmin(id: number, field: string) {
-    const admin = await this.prisma.employee.findUnique({ where: { id } });
+  private async validateAdmin(id, field: string) {
+    const admin = await this.prisma.employee.findUnique({
+      where: { id: Number(id) },
+    });
     if (!admin) throw new NotFoundException(`${field} employee not found`);
     if (admin.role === RoleName.EMPLOYEE)
       throw new BadRequestException(`${field} must be an admin`);
@@ -21,34 +23,40 @@ export class AllocationsService {
 
   async allocate(dto: CreateAllocationDto) {
     const asset = await this.prisma.asset.findUnique({
-      where: { id: dto.assetId },
+      where: { id: Number(dto.assetId) },
     });
     if (!asset) throw new NotFoundException('Asset not found');
     if (asset.status === AssetStatus.ALLOCATED)
       throw new BadRequestException('Asset already allocated');
 
     const employee = await this.prisma.employee.findUnique({
-      where: { id: dto.assignedEmployeeId },
+      where: { id: Number(dto.assignedEmployeeId) },
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
-    await this.validateAdmin(dto.allocatedById, 'allocatedBy');
+    await this.validateAdmin(Number(dto.allocatedById), 'allocatedBy');
 
     const [allocation] = await this.prisma.$transaction([
       this.prisma.allocationHistory.create({
-        data: { ...dto, allocationDate: new Date(dto.allocationDate) },
+        data: {
+          ...dto,
+          assetId: Number(dto.assetId),
+          allocatedById: Number(dto.allocatedById),
+          assignedEmployeeId: Number(dto.assignedEmployeeId),
+          allocationDate: new Date(dto.allocationDate),
+        },
       }),
       this.prisma.asset.update({
-        where: { id: dto.assetId },
+        where: { id: Number(dto.assetId) },
         data: { status: AssetStatus.ALLOCATED },
       }),
     ]);
     return allocation;
   }
 
-  async return(id: number, dto: ReturnAllocationDto) {
+  async return(id: string, dto: ReturnAllocationDto) {
     const allocation = await this.prisma.allocationHistory.findUnique({
-      where: { id },
+      where: { id: Number(id) },
     });
     if (!allocation) throw new NotFoundException('Allocation not found');
     if (allocation.returnDate)
@@ -57,8 +65,12 @@ export class AllocationsService {
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.allocationHistory.update({
-        where: { id },
-        data: { ...dto, returnDate: new Date(dto.returnDate) },
+        where: { id: Number(id) },
+        data: {
+          ...dto,
+          receivingAdminId: Number(dto.receivingAdminId),
+          returnDate: new Date(dto.returnDate),
+        },
       }),
       this.prisma.asset.update({
         where: { id: allocation.assetId },
@@ -68,9 +80,9 @@ export class AllocationsService {
     return updated;
   }
 
-  async getByAsset(assetId: number) {
+  async getByAsset(assetId: string) {
     return this.prisma.allocationHistory.findMany({
-      where: { assetId: assetId },
+      where: { assetId: Number(assetId) },
       include: {
         assignedEmployee: {
           select: {
@@ -94,9 +106,9 @@ export class AllocationsService {
     });
   }
 
-  async getByEmployee(employeeId: number) {
+  async getByEmployee(employeeId: string) {
     return this.prisma.allocationHistory.findMany({
-      where: { assignedEmployeeId: employeeId },
+      where: { assignedEmployeeId: Number(employeeId) },
       include: {
         asset: {
           select: {

@@ -46,6 +46,9 @@ export class EmployeesController {
 
   @Get('me')
   findMe(@Req() req) {
+    if (req.user._id) {
+      req.user.id = req.user._id.toString();
+    }
     return this.employeesService.findOne(req.user.id);
   }
 

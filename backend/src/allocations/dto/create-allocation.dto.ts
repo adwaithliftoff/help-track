@@ -1,17 +1,17 @@
-import { IsDateString, IsInt, IsString } from 'class-validator';
+import { IsDateString, IsString } from 'class-validator';
 
 export class CreateAllocationDto {
-  @IsInt()
-  assetId: number;
+  @IsString()
+  assetId: string;
 
-  @IsInt()
-  assignedEmployeeId: number;
+  @IsString()
+  assignedEmployeeId: string;
 
   @IsDateString()
   allocationDate: string;
 
-  @IsInt()
-  allocatedById: number;
+  @IsString()
+  allocatedById: string;
 
   @IsString()
   remarks: string;

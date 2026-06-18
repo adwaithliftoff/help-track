@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee, EmployeeDocument } from 'src/mongoose.schemas';
@@ -54,7 +58,11 @@ export class EmployeesMongooseService {
   }
 
   async findOne(id: string) {
-    return this.employeeModel.findById(id).populate('departmentId');
+    const employee = await this.employeeModel
+      .findById(id)
+      .populate('departmentId');
+    if (!employee) throw new NotFoundException('Asset not found');
+    return { ...employee.toObject(), id: employee._id.toString() };
   }
 
   async findByClerkUserId(clerkUserId: string) {

@@ -234,6 +234,37 @@ export class AllocationHistory {
 export const AllocationHistorySchema =
   SchemaFactory.createForClass(AllocationHistory);
 
+AllocationHistorySchema.virtual('asset', {
+  ref: 'Asset',
+  localField: 'assetId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+AllocationHistorySchema.virtual('assignedEmployee', {
+  ref: 'Employee',
+  localField: 'assignedEmployeeId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+AllocationHistorySchema.virtual('allocatedBy', {
+  ref: 'Employee',
+  localField: 'allocatedById',
+  foreignField: '_id',
+  justOne: true,
+});
+
+AllocationHistorySchema.virtual('receivingAdmin', {
+  ref: 'Employee',
+  localField: 'receivingAdminId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+AllocationHistorySchema.set('toJSON', { virtuals: true });
+AllocationHistorySchema.set('toObject', { virtuals: true });
+
 // ─── RolePermission ───────────────────────────────────────────────────────────
 
 export type RolePermissionDocument = RolePermission & Document;

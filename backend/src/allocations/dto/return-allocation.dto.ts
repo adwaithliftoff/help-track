@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsInt, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsString } from 'class-validator';
 import { ReturnCondition } from 'generated/prisma/enums';
 
 export class ReturnAllocationDto {
@@ -8,8 +8,8 @@ export class ReturnAllocationDto {
   @IsEnum(ReturnCondition)
   returnCondition: ReturnCondition;
 
-  @IsInt()
-  receivingAdminId: number;
+  @IsString()
+  receivingAdminId: string;
 
   @IsString()
   remarks: string;

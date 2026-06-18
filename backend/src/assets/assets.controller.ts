@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Inject,
 } from '@nestjs/common';
 import { AssetsService } from './assets.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
@@ -19,7 +20,9 @@ import { RequirePermissions } from 'src/auth/claims.decorator';
 @UseGuards(ClerkAuthGuard, ClaimsGuard)
 @Controller('assets')
 export class AssetsController {
-  constructor(private readonly assetsService: AssetsService) {}
+  constructor(
+    @Inject('ASSET_SERVICE') private readonly assetsService: AssetsService,
+  ) {}
 
   @RequirePermissions('ASSET_CREATE')
   @Post()
@@ -52,18 +55,18 @@ export class AssetsController {
   @RequirePermissions('ASSET_READ')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.assetsService.findOne(+id);
+    return this.assetsService.findOne(id);
   }
 
   @RequirePermissions('ASSET_UPDATE')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAssetDto: UpdateAssetDto) {
-    return this.assetsService.update(+id, updateAssetDto);
+    return this.assetsService.update(id, updateAssetDto);
   }
 
   @RequirePermissions('ASSET_DELETE')
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.assetsService.remove(+id);
+    return this.assetsService.remove(id);
   }
 }

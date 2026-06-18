@@ -7,6 +7,7 @@ import {
   Patch,
   Get,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
 import { AllocationsService } from './allocations.service';
 import { CreateAllocationDto } from './dto/create-allocation.dto';
@@ -19,7 +20,10 @@ import { RequirePermissions } from 'src/auth/claims.decorator';
 @UseGuards(ClerkAuthGuard)
 @Controller('allocations')
 export class AllocationsController {
-  constructor(private readonly allocationsService: AllocationsService) {}
+  constructor(
+    @Inject('ALLOCATION_SERVICE')
+    private readonly allocationsService: AllocationsService,
+  ) {}
 
   @UseGuards(ClaimsGuard)
   @RequirePermissions('ALLOCATION_CREATE')
@@ -31,24 +35,21 @@ export class AllocationsController {
   @UseGuards(ClaimsGuard)
   @RequirePermissions('ALLOCATION_UPDATE')
   @Patch(':id/return')
-  return(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: ReturnAllocationDto,
-  ) {
+  return(@Param('id') id: string, @Body() dto: ReturnAllocationDto) {
     return this.allocationsService.return(id, dto);
   }
 
   @UseGuards(ClaimsGuard)
   @RequirePermissions('ALLOCATION_READ')
   @Get('asset/:id')
-  getByAsset(@Param('id', ParseIntPipe) id: number) {
+  getByAsset(@Param('id') id: string) {
     return this.allocationsService.getByAsset(id);
   }
 
   @UseGuards(SelfGuard)
   @RequirePermissions('ALLOCATION_READ')
   @Get('employee/:id')
-  getByEmployee(@Param('id', ParseIntPipe) id: number) {
+  getByEmployee(@Param('id') id: string) {
     return this.allocationsService.getByEmployee(id);
   }
 }
