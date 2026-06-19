@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -27,7 +27,6 @@ export class CreateTicketDto {
   priority?: TicketPriority;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  linkedAssetId?: number;
+  @IsString()
+  linkedAssetId?: string;
 }

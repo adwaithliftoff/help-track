@@ -13,7 +13,7 @@ export default function TicketComments({
   comments,
   onCommentAdded,
 }: {
-  ticketId: number;
+  ticketId: string;
   comments: Comment[];
   onCommentAdded: () => void;
 }) {

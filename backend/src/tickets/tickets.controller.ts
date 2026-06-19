@@ -10,6 +10,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFiles,
+  Inject,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -25,12 +26,13 @@ import { extname } from 'node:path';
 import { FileValidationPipe } from 'src/common/pipes/file-validation.pipe';
 import { randomUUID } from 'node:crypto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import type { Employee } from 'generated/prisma/browser';
 
 @UseGuards(ClerkAuthGuard)
 @Controller('tickets')
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(
+    @Inject('TICKET_SERVICE') private readonly ticketsService: TicketsService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -49,9 +51,9 @@ export class TicketsController {
   create(
     @Body() createTicketDto: CreateTicketDto,
     @UploadedFiles(new FileValidationPipe()) files: Express.Multer.File[],
-    @CurrentUser() user: Employee,
+    @CurrentUser() user,
   ) {
-    return this.ticketsService.create(createTicketDto, files, user.id);
+    return this.ticketsService.create(createTicketDto, files, user);
   }
 
   @Get()
@@ -67,28 +69,28 @@ export class TicketsController {
       dateFrom?: string;
       dateTo?: string;
     },
-    @CurrentUser() user: Employee,
+    @CurrentUser() user,
   ) {
     return this.ticketsService.findAll(query, user);
   }
 
   @Get(':ticketId/attachments/:filename')
   async getAttachment(
-    @Param('ticketId') ticketId: number,
+    @Param('ticketId') ticketId: string,
     @Param('filename') filename: string,
-    @CurrentUser() user: Employee,
+    @CurrentUser() user,
   ) {
     return this.ticketsService.getAttachment(ticketId, user, filename);
   }
 
   @Get(':id/comments')
-  getComments(@Param('id') id: string, @CurrentUser() user: Employee) {
-    return this.ticketsService.getComments(+id, user);
+  getComments(@Param('id') id: string, @CurrentUser() user) {
+    return this.ticketsService.getComments(id, user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser() user: Employee) {
-    return this.ticketsService.findOne(+id, user);
+  findOne(@Param('id') id: string, @CurrentUser() user) {
+    return this.ticketsService.findOne(id, user);
   }
 
   @Patch(':id')
@@ -110,31 +112,31 @@ export class TicketsController {
     @Param('id') id: string,
     @Body() updateTicketDto: UpdateTicketDto,
     @UploadedFiles(new FileValidationPipe()) files: Express.Multer.File[],
-    @CurrentUser() user: Employee,
+    @CurrentUser() user,
   ) {
-    return this.ticketsService.update(+id, updateTicketDto, files, user.id);
+    return this.ticketsService.update(id, updateTicketDto, files, user);
   }
 
   @UseGuards(ClaimsGuard)
   @RequirePermissions('TICKET_MANAGE')
   @Patch(':id/manage')
   manage(@Param('id') id: string, @Body() manageTicketDto: ManageTicketDto) {
-    return this.ticketsService.manage(+id, manageTicketDto);
+    return this.ticketsService.manage(id, manageTicketDto);
   }
 
   @UseGuards(ClaimsGuard)
   @RequirePermissions('TICKET_DELETE')
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.ticketsService.remove(+id);
+    return this.ticketsService.remove(id);
   }
 
   @Post(':id/comments')
   postComment(
     @Body() createCommentDto: CreateCommentDto,
     @Param('id') id: string,
-    @CurrentUser() user: Employee,
+    @CurrentUser() user,
   ) {
-    return this.ticketsService.addComment(+id, createCommentDto, user);
+    return this.ticketsService.addComment(id, createCommentDto, user);
   }
 }

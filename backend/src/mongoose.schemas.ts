@@ -300,6 +300,23 @@ export class TicketComment {
 
 export const TicketCommentSchema = SchemaFactory.createForClass(TicketComment);
 
+TicketCommentSchema.virtual('updater', {
+  ref: 'Employee',
+  localField: 'updaterId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+TicketCommentSchema.virtual('ticket', {
+  ref: 'Ticket',
+  localField: 'ticketId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+TicketCommentSchema.set('toJSON', { virtuals: true });
+TicketCommentSchema.set('toObject', { virtuals: true });
+
 // ─── Ticket ───────────────────────────────────────────────────────────────────
 
 export type TicketDocument = Ticket & Document;
@@ -341,3 +358,34 @@ export class Ticket {
 }
 
 export const TicketSchema = SchemaFactory.createForClass(Ticket);
+
+TicketSchema.virtual('creator', {
+  ref: 'Employee',
+  localField: 'creatorId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+TicketSchema.virtual('assignee', {
+  ref: 'Employee',
+  localField: 'assigneeId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+TicketSchema.virtual('linkedEmployee', {
+  ref: 'Employee',
+  localField: 'linkedEmployeeId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+TicketSchema.virtual('linkedAsset', {
+  ref: 'Asset',
+  localField: 'linkedAssetId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+TicketSchema.set('toJSON', { virtuals: true });
+TicketSchema.set('toObject', { virtuals: true });

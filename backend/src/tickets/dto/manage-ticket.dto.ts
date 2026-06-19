@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import {
   TicketCategory,
   TicketPriority,
@@ -14,11 +14,11 @@ export class ManageTicketDto {
   @IsOptional()
   status?: TicketStatus;
 
-  @IsInt()
+  @IsString()
   @IsOptional()
   assigneeId?: number;
 
-  @IsInt()
+  @IsString()
   @IsOptional()
   linkedEmployeeId?: number;
 

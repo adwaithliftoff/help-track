@@ -76,6 +76,7 @@ export default function TicketPage() {
   const router = useRouter();
   const id = params.id;
   const me = useAuth();
+  const canManage = me?.orgRole === "org:admin" || false;
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,7 +136,7 @@ export default function TicketPage() {
             : "",
           resolutionNote: ticketData.resolutionNote ?? "",
         });
-        if (me?.orgRole === "org:admin") {
+        if (canManage) {
           const employeeList = await apiFetch("/employees");
           setEmployees(employeeList);
         }
@@ -146,7 +147,7 @@ export default function TicketPage() {
       }
     }
     if (id) fetchData();
-  }, [id]);
+  }, [id, canManage]);
 
   function handleChange(
     e: React.ChangeEvent<
@@ -224,12 +225,8 @@ export default function TicketPage() {
           status: manageForm.status || undefined,
           priority: manageForm.priority || undefined,
           category: manageForm.category || undefined,
-          assigneeId: manageForm.assigneeId
-            ? Number(manageForm.assigneeId)
-            : undefined,
-          linkedEmployeeId: manageForm.linkedEmployeeId
-            ? Number(manageForm.linkedEmployeeId)
-            : undefined,
+          assigneeId: manageForm.assigneeId || undefined,
+          linkedEmployeeId: manageForm.linkedEmployeeId || undefined,
           resolutionNote: manageForm.resolutionNote || undefined,
         }),
       });
@@ -253,7 +250,6 @@ export default function TicketPage() {
 
   if (!ticket) return null;
   const isCreator = ticket.creatorId === currentUser?.id;
-  const canManage = me?.orgRole === "org:admin" || false;
 
   async function handleDelete() {
     if (!confirm("Delete this ticket?")) return;
@@ -666,7 +662,7 @@ export default function TicketPage() {
         <div className="space-y-6">
           <section className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
             <TicketComments
-              ticketId={Number(id)}
+              ticketId={String(id)}
               comments={comments}
               onCommentAdded={fetchComments}
             ></TicketComments>{" "}

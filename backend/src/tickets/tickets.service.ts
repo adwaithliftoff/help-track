@@ -30,10 +30,17 @@ export class TicketsService {
     linkedAsset: { select: { assetName: true } },
   } as const;
 
-  async create(createTicketDto: CreateTicketDto, files, userId: number) {
+  async create(createTicketDto: CreateTicketDto, files, user: Employee) {
     const attachments = files.map((file) => file.filename);
     return this.prisma.ticket.create({
-      data: { ...createTicketDto, attachments, creatorId: userId },
+      data: {
+        ...createTicketDto,
+        linkedAssetId: createTicketDto.linkedAssetId
+          ? Number(createTicketDto.linkedAssetId)
+          : undefined,
+        attachments,
+        creatorId: user.id,
+      },
     });
   }
 
@@ -77,9 +84,9 @@ export class TicketsService {
     });
   }
 
-  async findOne(id: number, user: Employee) {
+  async findOne(id: string, user: Employee) {
     const ticket = await this.prisma.ticket.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: this.ticketInclude,
     });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
@@ -91,21 +98,23 @@ export class TicketsService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateTicketDto: UpdateTicketDto,
     files,
-    userId: number,
+    user: Employee,
   ) {
-    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id: Number(id) },
+    });
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
     const newAttachments = files.map((file) => file.filename);
     const attachments =
       newAttachments.length > 0
         ? [...ticket.attachments, ...newAttachments]
         : ticket.attachments;
-    if (ticket.creatorId === userId) {
+    if (ticket.creatorId === user.id) {
       return this.prisma.ticket.update({
-        where: { id },
+        where: { id: Number(id) },
         data: { ...updateTicketDto, attachments },
         include: this.ticketInclude,
       });
@@ -113,25 +122,29 @@ export class TicketsService {
     throw new ForbiddenException('Access denied');
   }
 
-  manage(id: number, manageTicketDto: ManageTicketDto) {
+  manage(id: string, manageTicketDto: ManageTicketDto) {
     return this.prisma.ticket.update({
-      where: { id },
-      data: { ...manageTicketDto },
+      where: { id: Number(id) },
+      data: {
+        ...manageTicketDto,
+        assigneeId: Number(manageTicketDto.assigneeId),
+        linkedEmployeeId: Number(manageTicketDto.linkedEmployeeId),
+      },
       include: this.ticketInclude,
     });
   }
 
-  remove(id: number) {
-    return this.prisma.ticket.delete({ where: { id } });
+  remove(id: string) {
+    return this.prisma.ticket.delete({ where: { id: Number(id) } });
   }
 
   async addComment(
-    ticketId: number,
+    ticketId: string,
     createCommentDto: CreateCommentDto,
     user: Employee,
   ) {
     const ticket = await this.prisma.ticket.findUnique({
-      where: { id: ticketId },
+      where: { id: Number(ticketId) },
     });
     if (!ticket) throw new NotFoundException('Ticket not found');
     if (user.role === 'EMPLOYEE' && ticket.creatorId !== user.id) {
@@ -140,27 +153,27 @@ export class TicketsService {
     return this.prisma.ticketComment.create({
       data: {
         ...createCommentDto,
-        ticketId,
+        ticketId: Number(ticketId),
         updaterId: user.id,
       },
     });
   }
 
-  async getComments(id: number, user: Employee) {
+  async getComments(id: string, user: Employee) {
     const ticket = await this.prisma.ticket.findUnique({
-      where: { id },
+      where: { id: Number(id) },
     });
     if (!ticket) throw new NotFoundException('Ticket not found');
     if (user.role === 'EMPLOYEE' && ticket.creatorId !== user.id) {
       throw new ForbiddenException('Access denied');
     }
     return this.prisma.ticketComment.findMany({
-      where: { ticketId: id },
+      where: { ticketId: Number(id) },
       include: { updater: { select: { fullName: true } } },
     });
   }
 
-  async getAttachment(ticketId: number, user: Employee, filename: string) {
+  async getAttachment(ticketId: string, user: Employee, filename: string) {
     const ticket = await this.findOne(ticketId, user);
     if (!ticket.attachments.includes(filename)) {
       throw new NotFoundException('Attachment not found');
